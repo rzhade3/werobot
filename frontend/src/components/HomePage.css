@@ -1,0 +1,310 @@
+.home {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #9333ea 0%, #ec4899 50%, #f97316 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.home-container {
+  max-width: 650px;
+  width: 100%;
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.title {
+  font-size: 2.5rem;
+  text-align: center;
+  color: #9333ea;
+  margin: 0 0 8px 0;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.subtitle {
+  text-align: center;
+  color: #6b7280;
+  font-size: 1rem;
+  margin: 0 0 32px 0;
+}
+
+.error {
+  background: #fee;
+  color: #c33;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  border: 1px solid #fcc;
+}
+
+.forms-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-section {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+.form-section h2 {
+  margin: 0 0 16px 0;
+  color: #1f2937;
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.form-section form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.action-type-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.radio-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 2px solid #d1d5db;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+}
+
+.radio-option:hover {
+  border-color: #9333ea;
+  background: #faf5ff;
+}
+
+.radio-option input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.radio-option input[type="radio"]:checked {
+  accent-color: #9333ea;
+}
+
+.radio-option:has(input:checked) {
+  border-color: #9333ea;
+  background: #f3e8ff;
+}
+
+.radio-option:has(input:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.radio-option span {
+  font-weight: 500;
+  color: #1f2937;
+  font-size: 0.95rem;
+}
+
+.form-section input {
+  padding: 12px 16px;
+  border: 2px solid #d1d5db;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  background: white;
+}
+
+.form-section input:focus {
+  outline: none;
+  border-color: #9333ea;
+}
+
+.form-section input:disabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.form-section input.room-code-input {
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: 0.1em;
+}
+
+.form-section button {
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: #9333ea;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #7c3aed;
+}
+
+.btn-secondary {
+  background: white;
+  color: #9333ea;
+  border: 2px solid #9333ea !important;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #f3e8ff;
+}
+
+.form-section button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #d1d5db;
+  color: white;
+  border: none !important;
+}
+
+.divider {
+  text-align: center;
+  color: #9ca3af;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 8px 0;
+  margin: 16px 0;
+}
+
+.error {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  border: 1px solid #fecaca;
+}
+
+@media (max-width: 600px) {
+  .home-container {
+    padding: 30px 20px;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+  
+  .how-to-play {
+    padding: 20px;
+  }
+}
+
+.how-to-play {
+  margin-bottom: 32px;
+  padding: 24px;
+  background: #f3e8ff;
+  border-radius: 12px;
+}
+
+.how-to-play h3 {
+  margin: 0 0 16px 0;
+  color: #7c3aed;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.how-to-play-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.how-to-play-step {
+  display: flex;
+  align-items: start;
+  gap: 12px;
+}
+
+.step-icon {
+  border-radius: 9999px;
+  padding: 8px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-icon .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.step-icon-purple {
+  background: #ddd6fe;
+}
+
+.step-icon-purple .icon {
+  color: #7c3aed;
+}
+
+.step-icon-pink {
+  background: #fbcfe8;
+}
+
+.step-icon-pink .icon {
+  color: #db2777;
+}
+
+.step-icon-orange {
+  background: #fed7aa;
+}
+
+.step-icon-orange .icon {
+  color: #c2410c;
+}
+
+.step-icon-yellow {
+  background: #fef3c7;
+}
+
+.step-icon-yellow .icon {
+  color: #b45309;
+}
+
+.step-icon-red {
+  background: #fee2e2;
+}
+
+.step-icon-red .icon {
+  color: #dc2626;
+}
+
+.how-to-play-step p {
+  margin: 0;
+  color: #581c87;
+  line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+  .home-container {
+    padding: 25px;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+}

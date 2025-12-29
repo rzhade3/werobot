@@ -1,0 +1,24 @@
+name = "werobot-cleanup"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Run cleanup every 2 hours
+[triggers]
+crons = ["0 */2 * * *"]
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "werobot"
+database_id = "11be2786-6833-4ff5-925d-09719c806174"
+
+# Service binding to Durable Objects Worker for cleanup notifications
+[[services]]
+binding = "DURABLE_OBJECTS_WORKER"
+service = "werobot-durable-objects"
+
+# Environment Variables
+[vars]
+ROOM_TTL_HOURS = "6"
+CLEANUP_BATCH_SIZE = "100"

@@ -1,0 +1,28 @@
+name = "werobot"
+pages_build_output_dir = "frontend/build"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Service binding to Durable Objects Worker
+[[services]]
+binding = "DURABLE_OBJECTS_WORKER"
+service = "werobot-durable-objects"
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "werobot"
+database_id = "11be2786-6833-4ff5-925d-09719c806174"
+
+# KV Storage
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "e78d54b1dacb41b09227ecdf8ecb4886"
+
+# Environment Variables
+[vars]
+ENVIRONMENT = "production"
+ROOM_TTL_HOURS = "6"
+CLEANUP_BATCH_SIZE = "100"
+OPENAI_MODEL = "openai/gpt-4.1"
+OPENAI_API_ENDPOINT = "https://models.github.ai/inference/chat/completions"

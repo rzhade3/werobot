@@ -1,0 +1,175 @@
+.results {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #9333ea 0%, #ec4899 50%, #f97316 100%);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.results.loading,
+.results.error {
+  color: white;
+  font-size: 1.5rem;
+}
+
+.results-container {
+  background: white;
+  border-radius: 16px;
+  padding: 50px;
+  max-width: 800px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.winner-section {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.winner-title {
+  font-size: 3rem;
+  margin: 0 0 10px 0;
+}
+
+.winner-title.ai {
+  color: #dc2626;
+}
+
+.winner-title.human {
+  color: #16a34a;
+}
+
+.winner-subtitle {
+  font-size: 1.3rem;
+  color: #666;
+  margin: 0 0 30px 0;
+}
+
+.winner-name {
+  font-size: 2.5rem;
+  font-weight: 700;
+  padding: 20px;
+  border-radius: 15px;
+  display: inline-block;
+}
+
+.winner-name.ai {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 2px solid #fecaca;
+}
+
+.winner-name.human {
+  background: #dcfce7;
+  color: #166534;
+  border: 2px solid #bbf7d0;
+}
+
+.winner-message {
+  margin-top: 20px;
+  font-size: 1.1rem;
+  color: #666;
+}
+
+.players-summary h2 {
+  text-align: center;
+  margin: 0 0 25px 0;
+  color: #9333ea;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.player-card {
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid #ddd;
+  text-align: center;
+}
+
+.player-card.survived {
+  background: #dcfce7;
+  border-color: #22c55e;
+}
+
+.player-card.eliminated {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  opacity: 0.7;
+}
+
+.player-card.ai {
+  border-width: 3px;
+}
+
+.player-card.ai.survived {
+  border-color: #dc2626;
+  background: #fee2e2;
+}
+
+.player-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ai-badge {
+  background: #9333ea;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.player-status {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.play-again-btn {
+  width: 100%;
+  padding: 16px;
+  background: #9333ea;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.play-again-btn:hover {
+  background: #7c3aed;
+}
+
+@media (max-width: 768px) {
+  .results-container {
+    padding: 30px 20px;
+  }
+
+  .winner-title {
+    font-size: 2rem;
+  }
+
+  .winner-name {
+    font-size: 1.8rem;
+  }
+
+  .players-grid {
+    grid-template-columns: 1fr;
+  }
+}

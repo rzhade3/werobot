@@ -428,7 +428,7 @@ app.get('/api/rooms/:roomCode/state', requireAuth, requireRoomAccess, async (c) 
   const db: DatabaseQueries = c.get('db');
 
   const players = await db.getPlayersByRoomId(room.id);
-  const currentRound = await db.getCurrentRound(room.id);
+  const currentRound = await db.getCurrentRound(room.id, room);
   
   // Total rounds equals number of human players
   const humanPlayerCount = players.filter(p => !p.isAI).length;
@@ -453,7 +453,7 @@ app.get('/api/rooms/:roomCode/rounds/current', requireAuth, requireRoomAccess, a
   const room = c.get('room'); // Already validated by requireRoomAccess
   const session = c.get('session');
 
-  const round = await db.getCurrentRound(room.id);
+  const round = await db.getCurrentRound(room.id, room);
   if (!round) {
     return c.json({ success: false, error: 'No active round' }, 404);
   }
@@ -492,7 +492,7 @@ app.post('/api/rooms/:roomCode/rounds/current/answers', requireAuth, requireRoom
   const gameService: GameService = c.get('gameService');
   const room = c.get('room'); // Already validated by requireRoomAccess
 
-  const round = await db.getCurrentRound(room.id);
+  const round = await db.getCurrentRound(room.id, room);
   if (!round || round.status !== 'answering') {
     return c.json({ success: false, error: 'Not in answering phase' }, 400);
   }
@@ -545,7 +545,7 @@ app.get('/api/rooms/:roomCode/rounds/current/answers/status', requireAuth, requi
   const db: DatabaseQueries = c.get('db');
   const room = c.get('room'); // Already validated by requireRoomAccess
 
-  const round = await db.getCurrentRound(room.id);
+  const round = await db.getCurrentRound(room.id, room);
   if (!round) {
     return c.json({ success: false, error: 'No active round' }, 404);
   }
@@ -569,7 +569,7 @@ app.get('/api/rooms/:roomCode/rounds/current/answers', requireAuth, requireRoomA
   const gameService: GameService = c.get('gameService');
   const room = c.get('room'); // Already validated by requireRoomAccess
 
-  const round = await db.getCurrentRound(room.id);
+  const round = await db.getCurrentRound(room.id, room);
   if (!round || round.status !== 'voting') {
     return c.json({ success: false, error: 'Not in voting phase' }, 400);
   }
@@ -596,7 +596,7 @@ app.post('/api/rooms/:roomCode/rounds/current/votes', requireAuth, requireRoomAc
   const gameService: GameService = c.get('gameService');
   const room = c.get('room'); // Already validated by requireRoomAccess
 
-  const round = await db.getCurrentRound(room.id);
+  const round = await db.getCurrentRound(room.id, room);
   if (!round || round.status !== 'voting') {
     return c.json({ success: false, error: 'Not in voting phase' }, 400);
   }
@@ -645,7 +645,7 @@ app.get('/api/rooms/:roomCode/rounds/current/votes/status', requireAuth, require
   const db: DatabaseQueries = c.get('db');
   const room = c.get('room'); // Already validated by requireRoomAccess
 
-  const round = await db.getCurrentRound(room.id);
+  const round = await db.getCurrentRound(room.id, room);
   if (!round) {
     return c.json({ success: false, error: 'No active round' }, 404);
   }
@@ -668,7 +668,7 @@ app.get('/api/rooms/:roomCode/rounds/current/results', requireAuth, requireRoomA
   const gameService: GameService = c.get('gameService');
   const room = c.get('room'); // Already validated by requireRoomAccess
 
-  const round = await db.getCurrentRound(room.id);
+  const round = await db.getCurrentRound(room.id, room);
   if (!round || round.status !== 'complete') {
     return c.json({ success: false, error: 'Round not complete' }, 400);
   }
@@ -700,7 +700,7 @@ app.post('/api/rooms/:roomCode/rounds/next', requireAuth, requireRoomAccess, req
     return c.json({ success: true, data: { message: 'Game ended' } });
   }
 
-  const currentRound = await db.getCurrentRound(room.id);
+  const currentRound = await db.getCurrentRound(room.id, room);
   const nextRoundNumber = (currentRound?.roundNumber || 0) + 1;
 
   const round = await gameService.startNewRound(room.id, nextRoundNumber);
@@ -740,25 +740,9 @@ app.get('/api/rooms/:roomCode/winner', requireAuth, requireRoomAccess, async (c)
     return c.json({ success: false, error: 'Game not finished' }, 400);
   }
 
-  const winner = await gameService.determineWinner(room.id);
+  // Get winner and playerVotes in one call - no duplicate calculation
+  const { winner, playerVotes } = await gameService.determineWinner(room.id);
   const allPlayers = await db.getPlayersByRoomId(room.id);
-  
-  // Calculate total votes for each player
-  const rounds = await db.getRoundsByRoomId(room.id);
-  const playerVotes: Record<string, number> = {};
-  
-  for (const player of allPlayers) {
-    playerVotes[player.id] = 0;
-  }
-  
-  for (const round of rounds) {
-    const answers = await db.getAnswersByRoundId(round.id);
-    for (const answer of answers) {
-      if (playerVotes[answer.playerId] !== undefined) {
-        playerVotes[answer.playerId] += answer.votesReceived;
-      }
-    }
-  }
 
   return c.json({ 
     success: true, 

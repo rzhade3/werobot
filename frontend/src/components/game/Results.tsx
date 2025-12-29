@@ -118,11 +118,10 @@ export const Results: React.FC<ResultsProps> = ({ roomCode, playerId, onPlayAgai
                   key={player.id}
                   className={`player-card ${index === 0 && !player.isAI ? 'winner' : ''} ${player.isAI ? 'ai' : ''}`}
                 >
-                  <div className="player-rank" aria-label={`Rank ${index + 1}`}>#{index + 1}</div>
+                  <div className="player-rank" aria-label={`Rank ${index + 1}`}>{index === 0 ? '👑' : `#${index + 1}`}</div>
                   <div className="player-name">
                     {player.name}
                     {player.isAI && <span className="ai-badge">AI</span>}
-                    {index === 0 && !player.isAI && <span className="winner-badge" aria-label="Winner"><span aria-hidden="true">👑</span> Winner</span>}
                   </div>
                   <div className="player-votes">
                     {playerVotes[player.id] || 0} {(playerVotes[player.id] || 0) === 1 ? 'vote' : 'votes'}

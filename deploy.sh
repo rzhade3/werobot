@@ -32,20 +32,9 @@ echo ""
 
 # Step 4: Deploy Pages (frontend + API via Functions)
 echo "📤 Step 4: Deploying Pages with Functions..."
-npx wrangler pages deploy frontend/build --project-name=werobot --branch=production
+npx wrangler pages deploy frontend/build --project-name=werobot --branch=production --commit-dirty=true
 echo ""
 
 echo "✅ Deployment complete!"
 echo ""
 echo "🌐 Your app: https://werobot.pages.dev"
-echo ""
-echo "💡 AI binding configured via wrangler.toml"
-echo "   Check logs to verify: npx wrangler pages deployment tail --project-name=werobot"
-echo ""
-echo "Architecture:"
-echo "  ├─ Frontend: https://werobot.pages.dev"
-echo "  ├─ API: https://werobot.pages.dev/api/*"
-echo "  ├─ WebSocket: wss://werobot.pages.dev/api/ws"
-echo "  ├─ Cloudflare AI: 10K free inferences/day"
-echo "  └─ Durable Objects: Internal service binding (no public URL)"
-echo "  └─ Cleanup Worker: Scheduled (runs every 2 hours)"

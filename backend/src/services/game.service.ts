@@ -148,31 +148,20 @@ export class GameService {
     return activePlayers.length;
   }
 
-  async determineWinner(roomId: string): Promise<Player | null> {
+  async determineWinner(roomId: string): Promise<{ winner: Player | null; playerVotes: Record<string, number> }> {
     const allPlayers = await this.db.getPlayersByRoomId(roomId);
-    const room = await this.db.getRoomById(roomId);
 
     console.log(`Determining winner for room ${roomId}:`, {
       totalPlayers: allPlayers.length,
     });
 
-    // Get all rounds for this room
-    const rounds = await this.db.getRoundsByRoomId(roomId);
+    // Get aggregated votes using single SQL query - O(1) instead of O(n*m)
+    const playerVotes = await this.db.getPlayerVotesByRoomId(roomId);
     
-    // Calculate total votes received for each player
-    const playerVotes: Record<string, number> = {};
-    
+    // Initialize votes for players who didn't receive any votes
     for (const player of allPlayers) {
-      playerVotes[player.id] = 0;
-    }
-    
-    // Sum up votes from all rounds
-    for (const round of rounds) {
-      const answers = await this.db.getAnswersByRoundId(round.id);
-      for (const answer of answers) {
-        if (playerVotes[answer.playerId] !== undefined) {
-          playerVotes[answer.playerId] += answer.votesReceived;
-        }
+      if (playerVotes[player.id] === undefined) {
+        playerVotes[player.id] = 0;
       }
     }
 
@@ -183,7 +172,7 @@ export class GameService {
     
     if (humanPlayers.length === 0) {
       console.warn('No human players found');
-      return null;
+      return { winner: null, playerVotes };
     }
 
     let winner = humanPlayers[0];
@@ -198,7 +187,7 @@ export class GameService {
     }
 
     console.log(`Winner: ${winner.name} with ${minVotes} votes`);
-    return winner;
+    return { winner, playerVotes };
   }
 
   async isGameOver(roomId: string): Promise<boolean> {

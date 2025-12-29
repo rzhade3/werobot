@@ -243,7 +243,7 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
   };
 
   const currentPlayer = players.find((p) => p.id === playerId);
-  const activePlayers = players.filter((p) => !p.isEliminated);
+  const activeHumanPlayers = players.filter((p) => !p.isEliminated && !p.isAI);
   const humanPlayerCount = players.filter(p => !p.isAI).length;
 
   if (!roundData) {
@@ -258,7 +258,7 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
             <h1>Round {roundData.round.roundNumber}</h1>
           </div>
           <div className="players-alive" role="status" aria-live="polite" aria-atomic="true">
-            Players: {activePlayers.length}
+            Players: {activeHumanPlayers.length}
           </div>
         </header>
 

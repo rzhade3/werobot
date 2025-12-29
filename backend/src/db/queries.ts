@@ -189,17 +189,17 @@ export class DatabaseQueries {
     return result ? this.mapRound(result) : null;
   }
 
-  async getCurrentRound(roomId: string): Promise<Round | null> {
-    // Get the current round number from the room
-    const room = await this.getRoomById(roomId);
-    if (!room || room.currentRoundNumber === 0) {
+  async getCurrentRound(roomId: string, room?: Room): Promise<Round | null> {
+    // If room object provided, use it (avoids 1 DB query)
+    const roomData = room || await this.getRoomById(roomId);
+    if (!roomData || roomData.currentRoundNumber === 0) {
       return null;
     }
     
     // Get the round by room_id and round_number
     const result = await this.db
       .prepare('SELECT * FROM rounds WHERE room_id = ? AND round_number = ?')
-      .bind(roomId, room.currentRoundNumber)
+      .bind(roomId, roomData.currentRoundNumber)
       .first();
     return result ? this.mapRound(result) : null;
   }
@@ -311,6 +311,29 @@ export class DatabaseQueries {
       )
       .all();
     return results.map((r: any) => r.room_code);
+  }
+
+  // Aggregated vote query - O(1) instead of O(n*m)
+  async getPlayerVotesByRoomId(roomId: string): Promise<Record<string, number>> {
+    const { results } = await this.db
+      .prepare(
+        `SELECT 
+          answers.player_id, 
+          SUM(answers.votes_received) as total_votes
+         FROM rounds
+         INNER JOIN answers ON rounds.id = answers.round_id
+         WHERE rounds.room_id = ?
+         GROUP BY answers.player_id`
+      )
+      .bind(roomId)
+      .all();
+    
+    const playerVotes: Record<string, number> = {};
+    results.forEach((row: any) => {
+      playerVotes[row.player_id] = row.total_votes || 0;
+    });
+    
+    return playerVotes;
   }
 
   // Helper mapping functions

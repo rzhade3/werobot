@@ -72,6 +72,12 @@
   display: flex;
   gap: 12px;
   margin-bottom: 8px;
+  border: none;
+  padding: 0;
+}
+
+.action-type-selector legend {
+  padding: 0;
 }
 
 .radio-option {
@@ -199,20 +205,6 @@
   border: 1px solid #fecaca;
 }
 
-@media (max-width: 600px) {
-  .home-container {
-    padding: 30px 20px;
-  }
-
-  .title {
-    font-size: 2rem;
-  }
-  
-  .how-to-play {
-    padding: 20px;
-  }
-}
-
 .how-to-play {
   margin-bottom: 32px;
   padding: 24px;
@@ -301,10 +293,37 @@
 
 @media (max-width: 600px) {
   .home-container {
-    padding: 25px;
+    padding: 25px 15px;
   }
 
   .title {
-    font-size: 2rem;
+    font-size: 1.75rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .how-to-play {
+    padding: 20px 15px;
+    margin-bottom: 24px;
+  }
+
+  .how-to-play h3 {
+    font-size: 1rem;
+  }
+
+  .how-to-play-step p {
+    font-size: 0.9rem;
+  }
+
+  .radio-option {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .form-section input,
+  .form-section button {
+    font-size: 0.95rem;
   }
 }

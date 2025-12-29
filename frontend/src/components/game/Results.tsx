@@ -47,15 +47,17 @@ export const Results: React.FC<ResultsProps> = ({ roomCode, playerId, onPlayAgai
   }, [roomCode, playerId]);
 
   if (loading) {
-    return <div className="results loading">Loading results...</div>;
+    return <div className="results loading" role="status" aria-live="polite">Loading results...</div>;
   }
 
   if (error) {
     return (
       <div className="results error">
-        <h2>Failed to load results</h2>
-        <p>{error}</p>
-        <button onClick={onPlayAgain}>Return Home</button>
+        <div role="alert" aria-live="assertive">
+          <h2>Failed to load results</h2>
+          <p>{error}</p>
+          <button onClick={onPlayAgain}>Return Home</button>
+        </div>
       </div>
     );
   }
@@ -63,69 +65,77 @@ export const Results: React.FC<ResultsProps> = ({ roomCode, playerId, onPlayAgai
   if (!winner) {
     return (
       <div className="results error">
-        <h2>No Winner Determined</h2>
-        <p>The game ended but no winner could be determined.</p>
-        <button onClick={onPlayAgain}>Return Home</button>
+        <div role="alert" aria-live="assertive">
+          <h2>No Winner Determined</h2>
+          <p>The game ended but no winner could be determined.</p>
+          <button onClick={onPlayAgain}>Return Home</button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="results">
-      <div className="results-container">
-        <div className="winner-section">
+      <main className="results-container">
+        <section className="winner-section" aria-labelledby="winner-heading">
           {currentPlayer && winner && currentPlayer.id === winner.id ? (
             // Current player is the winner
             <>
-              <h1 className="winner-title human">🎉 YOU WIN!</h1>
+              <h1 id="winner-heading" className="winner-title human">
+                <span aria-hidden="true">🎉</span> YOU WIN!
+              </h1>
               <p className="winner-subtitle">Congratulations!</p>
-              <div className="winner-name human">{winner.name}</div>
+              <div className="winner-name human" aria-label={`Winner: ${winner.name}`}>{winner.name}</div>
               <p className="winner-message">You received the fewest votes!</p>
             </>
           ) : winner ? (
             // Current player didn't win
             <>
-              <h1 className="winner-title eliminated">🏆 GAME OVER</h1>
+              <h1 id="winner-heading" className="winner-title eliminated">
+                <span aria-hidden="true">🏆</span> GAME OVER
+              </h1>
               <p className="winner-subtitle">Winner</p>
-              <div className="winner-name human">{winner.name}</div>
+              <div className="winner-name human" aria-label={`Winner: ${winner.name}`}>{winner.name}</div>
               <p className="winner-message">{winner.name} received the fewest votes and wins!</p>
             </>
           ) : (
             <>
-              <h1 className="winner-title">🏆 GAME OVER</h1>
+              <h1 id="winner-heading" className="winner-title">
+                <span aria-hidden="true">🏆</span> GAME OVER
+              </h1>
               <p className="winner-subtitle">No winner determined</p>
             </>
           )}
-        </div>
+        </section>
 
-        <div className="players-summary">
-          <h2>Final Standings (by votes received)</h2>
-          <div className="players-grid">
+        <section className="players-summary" aria-labelledby="standings-heading">
+          <h2 id="standings-heading">Final Standings (by votes received)</h2>
+          <ul className="players-grid">
             {players
               .sort((a, b) => (playerVotes[a.id] || 0) - (playerVotes[b.id] || 0))
               .map((player, index) => (
-                <div
+                <li
                   key={player.id}
                   className={`player-card ${index === 0 && !player.isAI ? 'winner' : ''} ${player.isAI ? 'ai' : ''}`}
                 >
-                  <div className="player-rank">#{index + 1}</div>
+                  <div className="player-rank" aria-label={`Rank ${index + 1}`}>#{index + 1}</div>
                   <div className="player-name">
                     {player.name}
                     {player.isAI && <span className="ai-badge">AI</span>}
-                    {index === 0 && !player.isAI && <span className="winner-badge">👑 Winner</span>}
+                    {index === 0 && !player.isAI && <span className="winner-badge" aria-label="Winner"><span aria-hidden="true">👑</span> Winner</span>}
                   </div>
                   <div className="player-votes">
                     {playerVotes[player.id] || 0} {(playerVotes[player.id] || 0) === 1 ? 'vote' : 'votes'}
                   </div>
-                </div>
+                </li>
               ))}
-          </div>
-        </div>
+          </ul>
+        </section>
 
         <button className="play-again-btn" onClick={onPlayAgain}>
           Play Again
         </button>
-      </div>
+      </main>
     </div>
   );
 };

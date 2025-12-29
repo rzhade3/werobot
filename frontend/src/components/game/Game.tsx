@@ -247,33 +247,35 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
   const humanPlayerCount = players.filter(p => !p.isAI).length;
 
   if (!roundData) {
-    return <div className="game loading">Loading game...</div>;
+    return <div className="game loading" role="status" aria-live="polite">Loading game...</div>;
   }
 
   return (
     <div className="game">
-      <div className="game-container">
-        <div className="game-header">
+      <main className="game-container">
+        <header className="game-header">
           <div className="game-info">
             <h1>Round {roundData.round.roundNumber}</h1>
           </div>
-          <div className="players-alive">
+          <div className="players-alive" role="status" aria-live="polite" aria-atomic="true">
             Players: {activePlayers.length}
           </div>
-        </div>
+        </header>
 
         {phase === 'answering' && (
-          <div className="answering-phase">
+          <section className="answering-phase" aria-labelledby="answering-heading">
             <div className="prompt-display">
-              <h2>Prompt:</h2>
+              <h2 id="answering-heading">Prompt:</h2>
               <p className="prompt-text">{roundData.prompt.promptText}</p>
             </div>
 
             {!hasSubmittedAnswer && !currentPlayer?.isEliminated ? (
               <form onSubmit={handleSubmitAnswer}>
                 <h3>Your Answer:</h3>
-                <p className="hint">Try to sound like AI to avoid getting votes!</p>
+                <p className="hint" id="answer-hint">Try to sound like AI to avoid getting votes!</p>
+                <label htmlFor="answer-text" className="sr-only">Your answer to the prompt</label>
                 <textarea
+                  id="answer-text"
                   placeholder="Type your answer here..."
                   value={answerText}
                   onChange={(e) => setAnswerText(e.target.value)}
@@ -281,36 +283,39 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
                   disabled={loading}
                   maxLength={500}
                   rows={6}
+                  aria-required="true"
+                  aria-describedby="answer-hint"
                 />
-                <button type="submit" disabled={loading}>
+                <button type="submit" disabled={loading} aria-busy={loading}>
                   {loading ? 'Submitting...' : 'Submit Answer'}
                 </button>
               </form>
             ) : (
-              <div className="waiting">
+              <div className="waiting" role="status" aria-live="polite">
                 {currentPlayer?.isEliminated ? (
                   <p>You've been eliminated. Watch the game unfold!</p>
                 ) : (
                   <>
-                    <p>✓ Answer submitted! Waiting for others...</p>
-                    <div className="status">
+                    <p><span aria-hidden="true">✓</span> Answer submitted! Waiting for others...</p>
+                    <div className="status" aria-atomic="true">
                       Answers: {answerStatus.submitted}/{answerStatus.total}
                     </div>
                   </>
                 )}
               </div>
             )}
-          </div>
+          </section>
         )}
 
         {phase === 'voting' && (
-          <div className="voting-phase">
-            <h2>Vote for the answer that sounds most HUMAN</h2>
-            <p className="hint">Remember: Human answers have personality, creativity, or imperfections!</p>
+          <section className="voting-phase" aria-labelledby="voting-heading">
+            <h2 id="voting-heading">Vote for the answer that sounds most HUMAN</h2>
+            <p className="hint" id="voting-hint">Remember: Human answers have personality, creativity, or imperfections!</p>
 
             {!hasVoted && !currentPlayer?.isEliminated ? (
               <form onSubmit={handleSubmitVote}>
-                <div className="answers-list">
+                <fieldset className="answers-list">
+                  <legend className="sr-only">Choose the most human-sounding answer</legend>
                   {answers.map((answer, index) => (
                     <label 
                       key={answer.id} 
@@ -324,48 +329,49 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
                         checked={selectedAnswerId === answer.id}
                         onChange={(e) => setSelectedAnswerId(e.target.value)}
                         disabled={answer.isOwnAnswer}
+                        aria-label={`Answer ${index + 1}: ${answer.answerText}${answer.isOwnAnswer ? ' (your answer, cannot vote)' : ''}`}
                       />
-                      <div className="answer-content">
+                      <div className="answer-content" aria-hidden="true">
                         <strong>Answer {index + 1}:</strong>
                         {answer.isOwnAnswer && <span className="own-badge">Your Answer</span>}
                         <p>{answer.answerText}</p>
                       </div>
                     </label>
                   ))}
-                </div>
-                <button type="submit" disabled={!selectedAnswerId || loading}>
+                </fieldset>
+                <button type="submit" disabled={!selectedAnswerId || loading} aria-busy={loading}>
                   {loading ? 'Voting...' : 'Submit Vote'}
                 </button>
               </form>
             ) : (
-              <div className="waiting">
+              <div className="waiting" role="status" aria-live="polite">
                 {currentPlayer?.isEliminated ? (
                   <p>You've been eliminated. Watch the game unfold!</p>
                 ) : (
                   <>
-                    <p>✓ Vote submitted! Waiting for others...</p>
-                    <div className="status">
+                    <p><span aria-hidden="true">✓</span> Vote submitted! Waiting for others...</p>
+                    <div className="status" aria-atomic="true">
                       Votes: {voteStatus.submitted}/{voteStatus.total}
                     </div>
                   </>
                 )}
               </div>
             )}
-          </div>
+          </section>
         )}
 
         {phase === 'results' && (
-          <div className="results-phase">
-            <h2>Round {roundData.round.roundNumber} Results</h2>
+          <section className="results-phase" aria-labelledby="results-heading">
+            <h2 id="results-heading">Round {roundData.round.roundNumber} Results</h2>
 
             <div className="vote-results">
               <h3>Vote Summary</h3>
-              <div className="vote-list">
+              <ul className="vote-list">
                 {players
                   .filter((p) => !p.isEliminated)
                   .sort((a, b) => (voteCounts[b.id] || 0) - (voteCounts[a.id] || 0))
                   .map((player) => (
-                    <div
+                    <li
                       key={player.id}
                       className="vote-item"
                     >
@@ -383,40 +389,40 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
                           <em>"{playerAnswers[player.id]}"</em>
                         </div>
                       )}
-                    </div>
+                    </li>
                   ))}
-              </div>
+              </ul>
             </div>
 
             {gameEnded ? (
               // Game has ended - show button to view final results
               <>
                 {isHost ? (
-                  <button className="next-round-btn" onClick={handleViewFinalResults} disabled={loading}>
+                  <button className="next-round-btn" onClick={handleViewFinalResults} disabled={loading} aria-busy={loading}>
                     {loading ? 'Loading...' : 'View Final Results'}
                   </button>
                 ) : (
-                  <p className="waiting-host">Waiting for host to view final results...</p>
+                  <p className="waiting-host" role="status" aria-live="polite">Waiting for host to view final results...</p>
                 )}
               </>
             ) : (
               // Game still ongoing - show next round button
               <>
                 {isHost && roundData.round.roundNumber < humanPlayerCount && (
-                  <button className="next-round-btn" onClick={handleContinueToNextRound} disabled={loading}>
+                  <button className="next-round-btn" onClick={handleContinueToNextRound} disabled={loading} aria-busy={loading}>
                     {loading ? 'Starting...' : 'Continue to Next Round'}
                   </button>
                 )}
                 {!isHost && roundData.round.roundNumber < humanPlayerCount && (
-                  <p className="waiting-host">Waiting for host to start next round...</p>
+                  <p className="waiting-host" role="status" aria-live="polite">Waiting for host to start next round...</p>
                 )}
               </>
             )}
-          </div>
+          </section>
         )}
 
-        {error && <div className="error">{error}</div>}
-      </div>
+        {error && <div className="error" role="alert" aria-live="assertive">{error}</div>}
+      </main>
     </div>
   );
 };

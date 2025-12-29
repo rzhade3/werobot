@@ -85,6 +85,8 @@
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 15px;
   margin-bottom: 30px;
+  list-style: none;
+  padding: 0;
 }
 
 .player-card {
@@ -158,18 +160,46 @@
 
 @media (max-width: 768px) {
   .results-container {
-    padding: 30px 20px;
+    padding: 25px 15px;
+  }
+
+  .winner-section {
+    margin-bottom: 30px;
   }
 
   .winner-title {
-    font-size: 2rem;
+    font-size: 1.75rem;
+  }
+
+  .winner-subtitle {
+    font-size: 1.1rem;
   }
 
   .winner-name {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
+    padding: 15px;
+  }
+
+  .winner-message {
+    font-size: 1rem;
+  }
+
+  .players-summary h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
   }
 
   .players-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .player-card {
+    padding: 15px;
+  }
+
+  .player-name {
+    font-size: 1.1rem;
   }
 }

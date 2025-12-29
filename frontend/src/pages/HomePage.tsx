@@ -71,17 +71,17 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="home">
-      <div className="home-container">
+      <main className="home-container">
         <h1 className="title">We, Robot</h1>
         <p className="subtitle">Can you spot the humans among us?</p>
 
-        {error && <div className="error">{error}</div>}
+        {error && <div className="error" role="alert" aria-live="assertive">{error}</div>}
 
-        <div className="how-to-play">
-          <h3>How to Play</h3>
+        <section className="how-to-play" aria-labelledby="how-to-play-heading">
+          <h3 id="how-to-play-heading">How to Play</h3>
           <div className="how-to-play-steps">
             <div className="how-to-play-step">
-              <div className="step-icon step-icon-purple">
+              <div className="step-icon step-icon-purple" aria-hidden="true">
                 <Users className="icon" />
               </div>
               <div>
@@ -90,7 +90,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             <div className="how-to-play-step">
-              <div className="step-icon step-icon-pink">
+              <div className="step-icon step-icon-pink" aria-hidden="true">
                 <Lightbulb className="icon" />
               </div>
               <div>
@@ -99,7 +99,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             <div className="how-to-play-step">
-              <div className="step-icon step-icon-orange">
+              <div className="step-icon step-icon-orange" aria-hidden="true">
                 <Vote className="icon" />
               </div>
               <div>
@@ -108,7 +108,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             <div className="how-to-play-step">
-              <div className="step-icon step-icon-yellow">
+              <div className="step-icon step-icon-yellow" aria-hidden="true">
                 <Trophy className="icon" />
               </div>
               <div>
@@ -116,13 +116,14 @@ export const HomePage: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
         <div className="forms-container">
-          <div className="form-section">
-            <h2>Get Started</h2>
+          <section className="form-section" aria-labelledby="get-started-heading">
+            <h2 id="get-started-heading">Get Started</h2>
             <form onSubmit={handleSubmit}>
-              <div className="action-type-selector">
+              <fieldset className="action-type-selector">
+                <legend className="sr-only">Choose game action</legend>
                 <label className="radio-option">
                   <input
                     type="radio"
@@ -131,6 +132,7 @@ export const HomePage: React.FC = () => {
                     checked={actionType === 'create'}
                     onChange={(e) => setActionType(e.target.value as 'create' | 'join')}
                     disabled={loading}
+                    aria-label="Create new game"
                   />
                   <span>Create New Game</span>
                 </label>
@@ -142,39 +144,53 @@ export const HomePage: React.FC = () => {
                     checked={actionType === 'join'}
                     onChange={(e) => setActionType(e.target.value as 'create' | 'join')}
                     disabled={loading}
+                    aria-label="Join existing game"
                   />
                   <span>Join Existing Game</span>
                 </label>
-              </div>
+              </fieldset>
 
+              <label htmlFor="player-name" className="sr-only">Your name</label>
               <input
+                id="player-name"
                 type="text"
                 placeholder="Enter your name"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
                 disabled={loading}
                 maxLength={20}
+                aria-required="true"
               />
 
               {actionType === 'join' && (
-                <input
-                  type="text"
-                  placeholder="Enter room code"
-                  value={roomCode}
-                  onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                  disabled={loading}
-                  maxLength={6}
-                  className="room-code-input"
-                />
+                <>
+                  <label htmlFor="room-code" className="sr-only">Room code</label>
+                  <input
+                    id="room-code"
+                    type="text"
+                    placeholder="Enter room code"
+                    value={roomCode}
+                    onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                    disabled={loading}
+                    maxLength={6}
+                    className="room-code-input"
+                    aria-required="true"
+                  />
+                </>
               )}
 
-              <button type="submit" disabled={loading} className={actionType === 'create' ? 'btn-primary' : 'btn-secondary'}>
+              <button 
+                type="submit" 
+                disabled={loading} 
+                className={actionType === 'create' ? 'btn-primary' : 'btn-secondary'}
+                aria-busy={loading}
+              >
                 {loading ? (actionType === 'create' ? 'Creating...' : 'Joining...') : (actionType === 'create' ? 'Create New Room' : 'Join Existing Room')}
               </button>
             </form>
-          </div>
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

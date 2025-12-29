@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Deploying WeRobot (Same-Origin Architecture)"
+echo "🚀 Deploying WeRobot"
 echo ""
 
 # Step 1: Deploy Durable Objects Worker

@@ -99,37 +99,41 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, playerId, onGameStarted 
 
   return (
     <div className="lobby">
-      <div className="lobby-container">
-        <div className="lobby-header">
-          <h1>🤖 Game Lobby</h1>
+      <main className="lobby-container">
+        <header className="lobby-header">
+          <h1>
+            <span aria-hidden="true">🤖</span> Game Lobby
+          </h1>
           <div className="room-code">
             <span>Room Code:</span>
-            <code>{roomCode}</code>
+            <code aria-label={`Room code: ${roomCode.split('').join(' ')}`}>{roomCode}</code>
           </div>
-        </div>
+        </header>
 
         <div className="lobby-content">
-          <div className="players-section">
-            <h2>Players ({players.length}/6)</h2>
-            <div className="players-list">
+          <section className="players-section" aria-labelledby="players-heading">
+            <h2 id="players-heading">Players ({players.filter(p => !p.isAI).length}/6)</h2>
+            <ul className="players-list">
               {players.map((player) => (
-                <div key={player.id} className={`player-item ${player.isHost ? 'host' : ''}`}>
+                <li key={player.id} className={`player-item ${player.isHost ? 'host' : ''}`}>
                   <span className="player-name">{player.name}</span>
                   {player.isHost && <span className="badge">Host</span>}
-                </div>
+                </li>
               ))}
-            </div>
-          </div>
+            </ul>
+          </section>
 
-          <div className="prompt-section">
-            <h2>Submit Your Prompt</h2>
+          <section className="prompt-section" aria-labelledby="prompt-heading">
+            <h2 id="prompt-heading">Submit Your Prompt</h2>
             <p className="prompt-hint">
               Submit a question that players will answer. Make it interesting!
             </p>
 
             {!hasSubmittedPrompt ? (
               <form onSubmit={handleSubmitPrompt}>
+                <label htmlFor="prompt-text" className="sr-only">Your prompt question</label>
                 <textarea
+                  id="prompt-text"
                   placeholder="Example: What's your favorite childhood memory?"
                   value={promptText}
                   onChange={(e) => setPromptText(e.target.value)}
@@ -137,37 +141,41 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, playerId, onGameStarted 
                   disabled={loading}
                   maxLength={200}
                   rows={4}
+                  aria-required="true"
+                  aria-describedby="prompt-hint"
                 />
-                <button type="submit" disabled={loading}>
+                <button type="submit" disabled={loading} aria-busy={loading}>
                   {loading ? 'Submitting...' : 'Submit Prompt'}
                 </button>
               </form>
             ) : (
-              <div className="prompt-submitted">
-                ✓ Prompt submitted! Waiting for others...
+              <div className="prompt-submitted" role="status" aria-live="polite">
+                <span aria-hidden="true">✓</span> Prompt submitted! Waiting for others...
               </div>
             )}
 
-            <div className="prompt-status">
+            <div className="prompt-status" role="status" aria-live="polite" aria-atomic="true">
               Prompts: {promptStatus.submitted}/{promptStatus.total}
             </div>
-          </div>
+          </section>
         </div>
 
-        {error && <div className="error">{error}</div>}
+        {error && <div className="error" role="alert" aria-live="assertive">{error}</div>}
 
         {canStartGame && (
-          <button className="start-game-btn" onClick={handleStartGame} disabled={loading}>
+          <button className="start-game-btn" onClick={handleStartGame} disabled={loading} aria-busy={loading}>
             {loading ? 'Starting...' : 'Start Game'}
           </button>
         )}
 
         {!canStartGame && promptStatus.total === promptStatus.submitted && promptStatus.total > 0 && (
-          <div className="waiting-message">
-            Waiting for host to start the game...
+          <div className="waiting-message" role="status" aria-live="polite">
+            {isHost && promptStatus.total < 2 
+              ? 'Waiting for more players to join...'
+              : 'Waiting for host to start the game...'}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };

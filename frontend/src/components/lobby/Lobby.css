@@ -63,6 +63,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .player-item {
@@ -202,11 +205,29 @@
 }
 
 @media (max-width: 768px) {
+  .lobby-container {
+    padding: 25px 15px;
+  }
+
+  .lobby-header h1 {
+    font-size: 1.5rem;
+  }
+
   .lobby-content {
     grid-template-columns: 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .room-code {
+    padding: 8px 15px;
   }
 
   .room-code code {
     font-size: 1.2rem;
+  }
+
+  .prompt-section textarea {
+    font-size: 0.95rem;
   }
 }

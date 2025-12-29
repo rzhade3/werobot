@@ -1,5 +1,4 @@
 // Main API router using Hono framework
-// NOTE: CORS removed - same-origin deployment!
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';

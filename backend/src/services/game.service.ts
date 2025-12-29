@@ -38,19 +38,34 @@ export class GameService {
     return this.db.createPlayer(aiPlayer);
   }
 
-  async startNewRound(roomId: string, roundNumber: number): Promise<Round> {
-    // Get an unused prompt
-    const prompt = await this.db.getUnusedPrompt(roomId);
-    if (!prompt) {
-      throw new Error('No prompts available');
+  async assignPromptsToRounds(roomId: string): Promise<void> {
+    // Get all prompts and shuffle them
+    const prompts = await this.db.getPromptsByRoomId(roomId);
+    const shuffledPrompts = prompts.sort(() => Math.random() - 0.5);
+
+    // Assign each prompt to a round number
+    for (let i = 0; i < shuffledPrompts.length; i++) {
+      await this.db.assignPromptToRound(shuffledPrompts[i].id, i + 1);
     }
 
-    // Mark prompt as used
-    await this.db.markPromptAsUsed(prompt.id);
+    console.log(`Assigned ${shuffledPrompts.length} prompts to rounds for room ${roomId}`);
+  }
 
-    // Create new round
-    const round = createRound(roomId, roundNumber, prompt.id);
-    return this.db.createRound(round);
+  async startNewRound(roomId: string, roundNumber: number): Promise<Round> {
+    // Get the prompt assigned to this round number
+    const prompt = await this.db.getPromptByRoundNumber(roomId, roundNumber);
+    if (!prompt) {
+      throw new Error(`No prompt assigned to round ${roundNumber}`);
+    }
+
+    // Create the round
+    const round = createRound(roomId, roundNumber, prompt.id, 'answering');
+    const createdRound = await this.db.createRound(round);
+    
+    // Update room's current_round_number
+    await this.db.updateRoom(roomId, { currentRoundNumber: roundNumber });
+    
+    return createdRound;
   }
 
   async submitAnswer(roundId: string, playerId: string, answerText: string): Promise<Answer> {
@@ -70,13 +85,14 @@ export class GameService {
       throw new Error('Prompt not found');
     }
 
-    // Generate AI response with configurable endpoint and model
-    const aiResponse = await generateAIAnswer(
-      prompt.promptText, 
-      this.env.OPENAI_API_KEY || '',
-      this.env.OPENAI_API_ENDPOINT,
-      this.env.OPENAI_MODEL
-    );
+    // Generate AI response using Cloudflare AI or fallback
+    const aiResponse = await generateAIAnswer(prompt.promptText, {
+      aiBinding: this.env.AI,
+      apiKey: this.env.OPENAI_API_KEY,
+      endpoint: this.env.OPENAI_API_ENDPOINT,
+      model: this.env.OPENAI_MODEL,
+      environment: this.env.ENVIRONMENT,
+    });
 
     // Save answer
     return this.submitAnswer(roundId, aiPlayerId, aiResponse);
@@ -244,9 +260,13 @@ export class GameService {
     const selectedAnswerId = await rankAnswersForVote(
       prompt.promptText,
       votableAnswers,
-      this.env.OPENAI_API_KEY || '',
-      this.env.OPENAI_API_ENDPOINT,
-      this.env.OPENAI_MODEL
+      {
+        aiBinding: this.env.AI,
+        apiKey: this.env.OPENAI_API_KEY,
+        endpoint: this.env.OPENAI_API_ENDPOINT,
+        model: this.env.OPENAI_MODEL,
+        environment: this.env.ENVIRONMENT,
+      }
     );
 
     return selectedAnswerId;

@@ -16,6 +16,7 @@ export interface Room {
   status: 'lobby' | 'playing' | 'finished';
   maxPlayers: number;
   aiPlayerId?: string;
+  currentRoundNumber: number;
   createdAt: string;
   updatedAt: string;
 }

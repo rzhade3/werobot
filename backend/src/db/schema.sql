@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS rooms (
   status TEXT NOT NULL CHECK(status IN ('lobby', 'playing', 'finished')),
   max_players INTEGER DEFAULT 6,
   ai_player_id TEXT,
+  current_round_number INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   expires_at DATETIME DEFAULT (datetime('now', '+6 hours'))
@@ -18,6 +19,7 @@ CREATE INDEX IF NOT EXISTS idx_rooms_code ON rooms(room_code);
 CREATE INDEX IF NOT EXISTS idx_rooms_status ON rooms(status);
 CREATE INDEX IF NOT EXISTS idx_rooms_expires ON rooms(expires_at);
 CREATE INDEX IF NOT EXISTS idx_rooms_cleanup ON rooms(expires_at, status);
+CREATE INDEX IF NOT EXISTS idx_rooms_current_round ON rooms(current_round_number);
 
 -- Players table
 CREATE TABLE IF NOT EXISTS players (

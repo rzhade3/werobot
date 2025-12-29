@@ -27,6 +27,7 @@ type Variables = {
   gameService: GameService;
   player: any;
   room: any;
+  waitUntil: (promise: Promise<any>) => void;
 };
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -44,6 +45,15 @@ app.use('*', cors({
 app.use('*', async (c, next) => {
   c.set('db', new DatabaseQueries(c.env.DB));
   c.set('gameService', new GameService(c.env));
+  // Store waitUntil function (passed as 3rd param from Pages Functions or ExecutionContext)
+  const executionCtx = c.executionCtx;
+  if (executionCtx && typeof executionCtx.waitUntil === 'function') {
+    // Standard Workers format
+    c.set('waitUntil', executionCtx.waitUntil.bind(executionCtx));
+  } else if (executionCtx && typeof executionCtx === 'function') {
+    // Pages Functions format - waitUntil is passed directly
+    c.set('waitUntil', executionCtx);
+  }
   await next();
 });
 
@@ -384,8 +394,26 @@ app.post('/api/rooms/:roomCode/start', requireAuth, requireRoomAccess, requireHo
   const aiPlayer = await gameService.addAIPlayer(room.id);
   await db.updateRoom(room.id, { aiPlayerId: aiPlayer.id, status: 'playing' });
 
+  // Assign prompts to round numbers upfront (O(1) lookups later)
+  await gameService.assignPromptsToRounds(room.id);
+
   // Start first round
-  await gameService.startNewRound(room.id, 1);
+  const round = await gameService.startNewRound(room.id, 1);
+
+  // Trigger AI answer generation asynchronously
+  const waitUntil = c.get('waitUntil');
+  if (waitUntil) {
+    waitUntil(
+      gameService.generateAIAnswer(round.id, aiPlayer.id)
+        .then(() => broadcastToRoom(c, roomCode, 'answer:submitted'))
+        .catch(err => {
+          // Ignore constraint violation errors (AI already answered)
+          if (!err.message?.includes('UNIQUE constraint')) {
+            console.error('AI answer generation failed:', err);
+          }
+        })
+    );
+  }
 
   await broadcastToRoom(c, roomCode, 'game:started');
 
@@ -481,18 +509,34 @@ app.post('/api/rooms/:roomCode/rounds/current/answers', requireAuth, requireRoom
   // Broadcast that an answer was submitted
   await broadcastToRoom(c, roomCode, 'answer:submitted');
 
-  // Check if AI needs to answer
-  if (room.aiPlayerId) {
-    const aiAnswered = answers.some((a) => a.playerId === room.aiPlayerId);
-    if (!aiAnswered) {
-      await gameService.generateAIAnswer(round.id, room.aiPlayerId);
-    }
-  }
-
   // Check if all answered
   if (await gameService.allPlayersAnswered(round.id)) {
     await db.updateRound(round.id, { status: 'voting' });
     await broadcastToRoom(c, roomCode, 'voting:started');
+
+    // Trigger AI vote generation asynchronously when voting starts
+    if (room.aiPlayerId) {
+      const waitUntil = c.get('waitUntil');
+      if (waitUntil) {
+        waitUntil(
+          gameService.generateAIVote(round.id, room.aiPlayerId)
+            .then(selectedAnswerId => {
+              if (selectedAnswerId) {
+                const aiVoteRecord = createVote(round.id, room.aiPlayerId, selectedAnswerId);
+                return db.createVote(aiVoteRecord)
+                  .then(() => db.incrementAnswerVotes(selectedAnswerId))
+                  .then(() => broadcastToRoom(c, roomCode, 'vote:cast'));
+              }
+            })
+            .catch(err => {
+              // Ignore constraint violation errors (AI already voted)
+              if (!err.message?.includes('UNIQUE constraint')) {
+                console.error('AI vote generation failed:', err);
+              }
+            })
+        );
+      }
+    }
   }
 
   return c.json({ success: true, data: { message: 'Answer submitted' } });
@@ -582,20 +626,6 @@ app.post('/api/rooms/:roomCode/rounds/current/votes', requireAuth, requireRoomAc
   // Broadcast that a vote was cast
   await broadcastToRoom(c, roomCode, 'vote:cast');
 
-  // Check if AI needs to vote (if AI hasn't voted yet)
-  if (room.aiPlayerId) {
-    const aiVote = await db.getVoteByVoterAndRound(room.aiPlayerId, round.id);
-    if (!aiVote) {
-      // AI evaluates answers and votes for the most human-sounding one
-      const selectedAnswerId = await gameService.generateAIVote(round.id, room.aiPlayerId);
-      if (selectedAnswerId) {
-        const aiVoteRecord = createVote(round.id, room.aiPlayerId, selectedAnswerId);
-        await db.createVote(aiVoteRecord);
-        await db.incrementAnswerVotes(selectedAnswerId);
-      }
-    }
-  }
-
   // Check if all voted
   if (await gameService.allPlayersVoted(round.id)) {
     // Mark round as complete (no elimination)
@@ -665,13 +695,33 @@ app.post('/api/rooms/:roomCode/rounds/next', requireAuth, requireRoomAccess, req
   const room = c.get('room'); // Already validated by requireRoomAccess
 
   if (await gameService.isGameOver(room.id)) {
-    return c.json({ success: false, error: 'Game is over' }, 400);
+    // Game is over - update status and broadcast game ended
+    await db.updateRoom(room.id, { status: 'finished' });
+    await broadcastToRoom(c, roomCode, 'game:ended');
+    return c.json({ success: true, data: { message: 'Game ended' } });
   }
 
   const currentRound = await db.getCurrentRound(room.id);
   const nextRoundNumber = (currentRound?.roundNumber || 0) + 1;
 
-  await gameService.startNewRound(room.id, nextRoundNumber);
+  const round = await gameService.startNewRound(room.id, nextRoundNumber);
+
+  // Trigger AI answer generation asynchronously
+  if (room.aiPlayerId) {
+    const waitUntil = c.get('waitUntil');
+    if (waitUntil) {
+      waitUntil(
+        gameService.generateAIAnswer(round.id, room.aiPlayerId)
+          .then(() => broadcastToRoom(c, roomCode, 'answer:submitted'))
+          .catch(err => {
+            // Ignore constraint violation errors (AI already answered)
+            if (!err.message?.includes('UNIQUE constraint')) {
+              console.error('AI answer generation failed:', err);
+            }
+          })
+      );
+    }
+  }
 
   await broadcastToRoom(c, roomCode, 'round:started');
 

@@ -4,7 +4,7 @@
 
 - Node.js 18+
 - Cloudflare account
-- GitHub Models API key (or OpenAI API key)
+- No API keys required! (Cloudflare AI is used by default)
 
 ## Local Development
 
@@ -16,8 +16,8 @@ npm install
 cd frontend && npm install && cd ..
 cd backend && npm install && cd ..
 
-# Set up environment variables
-# Edit .dev.vars in the root directory with your API keys
+# Optional: Set up external API fallback for development
+# Create .dev.vars in the root directory (optional - see below)
 
 # Start all services
 ./dev-local.sh
@@ -38,19 +38,26 @@ Visit: http://localhost:3000
 
 ## Environment Variables
 
+### Cloudflare AI (Default)
+
+**No configuration needed!** The app uses Cloudflare Workers AI by default with:
+- Model: `@cf/meta/llama-3.3-70b-instruct-fp8-fast`
+- Free tier: 10,000 AI inferences per day
+- Configured automatically via `wrangler.toml`
+
+### External API Fallback (Optional - Development Only)
+
+For development/testing, you can optionally configure an external API as a fallback. This **only works when ENVIRONMENT is not "production"**.
+
 **Local Development** (`.dev.vars` in root directory):
 ```env
+# Optional: External API fallback (only works in non-production)
 OPENAI_API_KEY=your-api-key
 OPENAI_API_ENDPOINT=https://models.github.ai/inference/chat/completions
 OPENAI_MODEL=openai/gpt-4.1
 ```
 
-**Production** (Cloudflare Secrets):
-```bash
-npx wrangler secret put OPENAI_API_KEY
-npx wrangler secret put OPENAI_API_ENDPOINT
-npx wrangler secret put OPENAI_MODEL
-```
+**Production** uses Cloudflare AI exclusively. External API secrets are ignored in production.
 
 **Frontend** (`frontend/.env.production`):
 ```env
@@ -98,10 +105,16 @@ npx wrangler d1 execute werobot --file=./backend/src/db/schema.sql
 
 ### AI Not Responding
 ```bash
-# Verify secrets are set
+# Check if Cloudflare AI binding is configured
+grep -A 2 "\[ai\]" wrangler.toml
+
+# Verify AI binding in local dev
+npx wrangler dev --local --ai AI
+
+# For external API fallback (development only):
 npx wrangler secret list
 
-# Test API key
+# Test external API key
 curl https://models.github.ai/inference/chat/completions \
   -H "Authorization: Bearer YOUR_KEY" \
   -H "Content-Type: application/json" \

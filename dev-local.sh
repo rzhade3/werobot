@@ -19,11 +19,13 @@ if [ ! -f ".dev.vars" ]; then
     echo -e "${RED}Error: .dev.vars file not found in root directory${NC}"
     echo "Creating .dev.vars with default values..."
     cat > .dev.vars << 'EOF'
-OPENAI_API_KEY=your-github-models-api-key-here
-OPENAI_API_ENDPOINT=https://models.github.ai/inference/chat/completions
-OPENAI_MODEL=openai/gpt-4.1
+# Optional: External API fallback (only works in non-production)
+# OPENAI_API_KEY=your-api-key-here
+# OPENAI_API_ENDPOINT=https://models.github.ai/inference/chat/completions
+# OPENAI_MODEL=openai/gpt-4.1
 EOF
-    echo -e "${GREEN}Created .dev.vars - please update with your API keys${NC}"
+    echo -e "${GREEN}Created .dev.vars - Cloudflare AI will be used by default${NC}"
+    echo -e "${GREEN}You can optionally configure external API fallback for development${NC}"
 fi
 
 # Function to kill background processes on exit

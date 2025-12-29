@@ -28,6 +28,7 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
   const [players, setPlayers] = useState<Player[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [gameEnded, setGameEnded] = useState(false);
 
   const fetchRoundData = useCallback(async () => {
     try {
@@ -43,12 +44,18 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
           setAnswerText('');
         }
         setSelectedAnswerId('');
+        // Fetch answer status to show current progress
+        const answerStatusData = await api.getAnswerStatus(roomCode, data.round.id);
+        setAnswerStatus(answerStatusData);
       } else if (data.round.status === 'voting') {
         setPhase('voting');
         setHasVoted(data.hasVoted || false);
         // Fetch answers for voting phase
         const answersData = await api.getAnswers(roomCode, data.round.id);
         setAnswers(answersData.answers.sort(() => Math.random() - 0.5));
+        // Fetch vote status to show current progress
+        const voteStatusData = await api.getVoteStatus(roomCode, data.round.id);
+        setVoteStatus(voteStatusData);
       } else if (data.round.status === 'complete') {
         // Fetch and show results
         const result = await api.getRoundResults(roomCode, data.round.id);
@@ -116,15 +123,13 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
       setPhase('results');
 
       if (result.gameEnded) {
-        // Give players time to see the round result before showing final results
-        setTimeout(() => {
-          onGameEnded();
-        }, 3000);
+        // Set flag that game has ended, but don't auto-transition
+        setGameEnded(true);
       }
     } catch (err) {
       console.error('Failed to get round results:', err);
     }
-  }, [roomCode, roundData, onGameEnded]);
+  }, [roomCode, roundData]);
 
   const fetchVoteStatus = useCallback(async () => {
     if (!roundData) return;
@@ -220,6 +225,19 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to start next round');
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewFinalResults = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      // Use the same API as next round - it handles game end case
+      await api.continueToNextRound(roomCode);
+      // Local state will be updated via WebSocket 'game:ended' event
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to view results');
       setLoading(false);
     }
   };
@@ -370,13 +388,29 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
               </div>
             </div>
 
-            {isHost && roundData.round.roundNumber < humanPlayerCount && (
-              <button className="next-round-btn" onClick={handleContinueToNextRound} disabled={loading}>
-                {loading ? 'Starting...' : 'Continue to Next Round'}
-              </button>
-            )}
-            {!isHost && roundData.round.roundNumber < humanPlayerCount && (
-              <p className="waiting-host">Waiting for host to start next round...</p>
+            {gameEnded ? (
+              // Game has ended - show button to view final results
+              <>
+                {isHost ? (
+                  <button className="next-round-btn" onClick={handleViewFinalResults} disabled={loading}>
+                    {loading ? 'Loading...' : 'View Final Results'}
+                  </button>
+                ) : (
+                  <p className="waiting-host">Waiting for host to view final results...</p>
+                )}
+              </>
+            ) : (
+              // Game still ongoing - show next round button
+              <>
+                {isHost && roundData.round.roundNumber < humanPlayerCount && (
+                  <button className="next-round-btn" onClick={handleContinueToNextRound} disabled={loading}>
+                    {loading ? 'Starting...' : 'Continue to Next Round'}
+                  </button>
+                )}
+                {!isHost && roundData.round.roundNumber < humanPlayerCount && (
+                  <p className="waiting-host">Waiting for host to start next round...</p>
+                )}
+              </>
             )}
           </div>
         )}

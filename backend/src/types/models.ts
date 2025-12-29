@@ -22,6 +22,7 @@ export interface Room {
   status: RoomStatus;
   maxPlayers: number;
   aiPlayerId?: string;
+  currentRoundNumber: number;
   createdAt: string;
   updatedAt: string;
   expiresAt: string;
@@ -33,6 +34,7 @@ export interface Prompt {
   playerId: string;
   promptText: string;
   isUsed: boolean;
+  assignedRoundNumber?: number;
   createdAt: string;
 }
 
@@ -95,7 +97,10 @@ export interface Env {
   // KV Storage
   SESSIONS: KVNamespace;
   
-  // Secrets
+  // Cloudflare AI Workers
+  AI?: Ai;
+  
+  // Secrets (fallback for non-production only)
   OPENAI_API_KEY?: string;
   OPENAI_API_ENDPOINT?: string;
   OPENAI_MODEL?: string;
@@ -163,6 +168,7 @@ export function createRoom(hostPlayerId: string): Omit<Room, 'createdAt' | 'upda
     hostPlayerId,
     status: 'lobby',
     maxPlayers: 6,
+    currentRoundNumber: 0,
   };
 }
 
@@ -183,14 +189,15 @@ export function createPrompt(
 export function createRound(
   roomId: string,
   roundNumber: number,
-  promptId: string
+  promptId: string,
+  status: RoundPhase = 'answering'
 ): Omit<Round, 'createdAt'> {
   return {
     id: generateId(),
     roomId,
     roundNumber,
     promptId,
-    status: 'answering',
+    status,
   };
 }
 

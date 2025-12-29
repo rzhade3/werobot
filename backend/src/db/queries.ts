@@ -8,10 +8,10 @@ export class DatabaseQueries {
   async createRoom(room: Omit<Room, 'createdAt' | 'updatedAt' | 'expiresAt'>): Promise<Room> {
     await this.db
       .prepare(
-        `INSERT INTO rooms (id, room_code, host_player_id, status, max_players, ai_player_id)
-         VALUES (?, ?, ?, ?, ?, ?)`
+        `INSERT INTO rooms (id, room_code, host_player_id, status, max_players, ai_player_id, current_round_number)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
       )
-      .bind(room.id, room.roomCode, room.hostPlayerId, room.status, room.maxPlayers, room.aiPlayerId || null)
+      .bind(room.id, room.roomCode, room.hostPlayerId, room.status, room.maxPlayers, room.aiPlayerId || null, room.currentRoundNumber)
       .run();
 
     return this.getRoomById(room.id) as Promise<Room>;
@@ -144,6 +144,21 @@ export class DatabaseQueries {
     return results.map(this.mapPrompt);
   }
 
+  async getPromptByRoundNumber(roomId: string, roundNumber: number): Promise<Prompt | null> {
+    const result = await this.db
+      .prepare('SELECT * FROM prompts WHERE room_id = ? AND assigned_round_number = ?')
+      .bind(roomId, roundNumber)
+      .first();
+    return result ? this.mapPrompt(result) : null;
+  }
+
+  async assignPromptToRound(promptId: string, roundNumber: number): Promise<void> {
+    await this.db
+      .prepare('UPDATE prompts SET assigned_round_number = ?, is_used = 1 WHERE id = ?')
+      .bind(roundNumber, promptId)
+      .run();
+  }
+
   async getUnusedPrompt(roomId: string): Promise<Prompt | null> {
     const result = await this.db
       .prepare('SELECT * FROM prompts WHERE room_id = ? AND is_used = 0 ORDER BY RANDOM() LIMIT 1')
@@ -175,9 +190,16 @@ export class DatabaseQueries {
   }
 
   async getCurrentRound(roomId: string): Promise<Round | null> {
+    // Get the current round number from the room
+    const room = await this.getRoomById(roomId);
+    if (!room || room.currentRoundNumber === 0) {
+      return null;
+    }
+    
+    // Get the round by room_id and round_number
     const result = await this.db
-      .prepare('SELECT * FROM rounds WHERE room_id = ? ORDER BY round_number DESC LIMIT 1')
-      .bind(roomId)
+      .prepare('SELECT * FROM rounds WHERE room_id = ? AND round_number = ?')
+      .bind(roomId, room.currentRoundNumber)
       .first();
     return result ? this.mapRound(result) : null;
   }
@@ -300,6 +322,7 @@ export class DatabaseQueries {
       status: row.status,
       maxPlayers: row.max_players,
       aiPlayerId: row.ai_player_id,
+      currentRoundNumber: row.current_round_number || 0,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       expiresAt: row.expires_at,
@@ -308,33 +331,37 @@ export class DatabaseQueries {
 
   private mapPlayer(row: any): Player {
     return {
-      ...row,
+      id: row.id,
       roomId: row.room_id,
+      name: row.name,
       passwordHash: row.password_hash,
       isAI: Boolean(row.is_ai),
       isEliminated: Boolean(row.is_eliminated),
       isHost: Boolean(row.is_host),
+      score: row.score,
       createdAt: row.created_at,
     };
   }
 
   private mapPrompt(row: any): Prompt {
     return {
-      ...row,
+      id: row.id,
       roomId: row.room_id,
       playerId: row.player_id,
       promptText: row.prompt_text,
       isUsed: Boolean(row.is_used),
+      assignedRoundNumber: row.assigned_round_number,
       createdAt: row.created_at,
     };
   }
 
   private mapRound(row: any): Round {
     return {
-      ...row,
+      id: row.id,
       roomId: row.room_id,
       roundNumber: row.round_number,
       promptId: row.prompt_id,
+      status: row.status,
       eliminatedPlayerId: row.eliminated_player_id,
       createdAt: row.created_at,
     };
@@ -342,7 +369,7 @@ export class DatabaseQueries {
 
   private mapAnswer(row: any): Answer {
     return {
-      ...row,
+      id: row.id,
       roundId: row.round_id,
       playerId: row.player_id,
       answerText: row.answer_text,
@@ -353,7 +380,7 @@ export class DatabaseQueries {
 
   private mapVote(row: any): Vote {
     return {
-      ...row,
+      id: row.id,
       roundId: row.round_id,
       voterId: row.voter_id,
       votedForAnswerId: row.voted_for_answer_id,

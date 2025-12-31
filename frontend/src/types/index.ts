@@ -19,6 +19,7 @@ export interface Room {
   currentRoundNumber: number;
   createdAt: string;
   updatedAt: string;
+  currentPlayerId?: string; // ID of the player viewing this room
 }
 
 export interface Prompt {

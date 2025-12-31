@@ -24,12 +24,11 @@ export const HomePage: React.FC = () => {
 
     try {
       const response = await apiService.createRoom(playerName.trim());
-      // Store session ID in sessionStorage for WebSocket auth
-      sessionStorage.setItem(`session_${response.roomCode}`, response.playerId);
+      
+      // Navigate immediately - room is created and session cookie is set
       navigate(`/room/${response.roomCode}`);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create room');
-    } finally {
       setLoading(false);
     }
   };
@@ -50,8 +49,8 @@ export const HomePage: React.FC = () => {
 
     try {
       const response = await apiService.joinRoom(roomCode.toUpperCase().trim(), playerName.trim());
-      // Store session ID in sessionStorage for WebSocket auth
-      sessionStorage.setItem(`session_${roomCode.toUpperCase().trim()}`, response.playerId);
+      
+      // Navigate immediately - session cookie is set
       navigate(`/room/${roomCode.toUpperCase().trim()}`);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to join room');

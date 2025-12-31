@@ -24,19 +24,7 @@ export const RoomPage: React.FC = () => {
 
     const verifyAccess = async () => {
       try {
-        // Check if session ID exists in sessionStorage
-        const sessionId = sessionStorage.getItem(`session_${roomCode.toUpperCase()}`);
-        
-        if (!sessionId) {
-          setError('No session found. Please join the room again.');
-          setTimeout(() => navigate('/'), 2000);
-          return;
-        }
-
-        // Verify with backend that the session is valid (uses HTTP-only cookie)
-        await apiService.getRoomDetails(roomCode.toUpperCase());
-        
-        // Get the current game state to determine which screen to show
+        // Verify access with backend and get initial game state
         const gameState = await apiService.getGameState(roomCode.toUpperCase());
         
         // Set the appropriate game state based on room status
@@ -48,23 +36,19 @@ export const RoomPage: React.FC = () => {
           setGameState('finished');
         }
         
-        setPlayerId(sessionId);
+        // Get playerId from the backend response (validated via session cookie)
+        setPlayerId(gameState.room.currentPlayerId || '');
+        setLoading(false);
+        
+        // Connect WebSocket after UI is ready
         try {
-          await socketService.connect(roomCode.toUpperCase(), sessionId);
-          // Give the connection a moment to fully establish
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await socketService.connect(roomCode.toUpperCase());
         } catch (wsErr) {
           console.error('WebSocket connection failed:', wsErr);
         }
-        setLoading(false);
       } catch (err: any) {
         console.error('Error verifying access:', err);
-        if (err.response?.status === 401) {
-          setError('Invalid session. Please join the room again.');
-        } else {
-          setError('Failed to access room');
-        }
-        setTimeout(() => navigate('/'), 2000);
+        navigate('/');
       }
     };
 

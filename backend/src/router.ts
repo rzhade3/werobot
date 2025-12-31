@@ -415,6 +415,7 @@ app.post('/api/rooms/:roomCode/start', requireAuth, requireRoomAccess, requireHo
 
 app.get('/api/rooms/:roomCode/state', requireAuth, requireRoomAccess, async (c) => {
   const room = c.get('room'); // Validated by requireRoomAccess
+  const session = c.get('session'); // From requireAuth
   const db: DatabaseQueries = c.get('db');
 
   const players = await db.getPlayersByRoomId(room.id);
@@ -426,7 +427,10 @@ app.get('/api/rooms/:roomCode/state', requireAuth, requireRoomAccess, async (c) 
   return c.json({
     success: true,
     data: {
-      room,
+      room: {
+        ...room,
+        currentPlayerId: session.playerId, // Include current player's ID in room object
+      },
       players,
       currentRound: currentRound?.roundNumber || 0,
       totalRounds: humanPlayerCount,
@@ -751,17 +755,16 @@ app.get('/api/rooms/:roomCode/winner', requireAuth, requireRoomAccess, async (c)
 /**
  * WebSocket upgrade endpoint
  * Connects client to the GameRoom Durable Object for real-time updates
- * Protected: Requires valid session
+ * Protected: Requires valid session cookie
  */
 app.get('/api/ws', async (c) => {
   const roomCode = c.req.query('roomCode');
-  const playerId = c.req.query('playerId');
 
-  if (!roomCode || !playerId) {
-    return c.json({ success: false, error: 'Missing roomCode or playerId' }, 400);
+  if (!roomCode) {
+    return c.json({ success: false, error: 'Missing roomCode' }, 400);
   }
 
-  // Verify session
+  // Verify session via cookie
   const db: DatabaseQueries = c.get('db');
   const verification = await verifySession(c.req.raw, c.env, db);
   
@@ -769,18 +772,26 @@ app.get('/api/ws', async (c) => {
     return c.json({ success: false, error: 'Unauthorized - Invalid session' }, 401);
   }
 
-  // Verify the session matches the requested connection
-  if (verification.session.roomCode !== roomCode || verification.session.playerId !== playerId) {
-    return c.json({ success: false, error: 'Forbidden - Session mismatch' }, 403);
+  // Verify the session matches the requested room
+  if (verification.session.roomCode !== roomCode) {
+    return c.json({ success: false, error: 'Forbidden - You are not in this room' }, 403);
   }
 
-  // Get the Durable Object for this room
-  const durableId = c.env.GAME_ROOM.idFromName(roomCode);
-  const stub = c.env.GAME_ROOM.get(durableId);
-
-  // Forward the WebSocket upgrade request
+  // Forward the WebSocket upgrade request with playerId in URL for Durable Object
   const url = new URL(c.req.url);
-  return stub.fetch(url.toString(), c.req.raw);
+  url.searchParams.set('playerId', verification.session.playerId);
+  
+  // Use DURABLE_OBJECTS_WORKER service binding if available (Pages Functions)
+  // Otherwise use GAME_ROOM directly (standalone Worker)
+  if (c.env.DURABLE_OBJECTS_WORKER) {
+    return c.env.DURABLE_OBJECTS_WORKER.fetch(url.toString(), c.req.raw);
+  } else if (c.env.GAME_ROOM) {
+    const durableId = c.env.GAME_ROOM.idFromName(roomCode);
+    const stub = c.env.GAME_ROOM.get(durableId);
+    return stub.fetch(url.toString(), c.req.raw);
+  }
+  
+  return c.json({ success: false, error: 'Durable Objects not configured' }, 500);
 });
 
 export default app;

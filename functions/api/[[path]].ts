@@ -1,4 +1,4 @@
-// Pages Functions - handles API and proxies WebSocket to Durable Objects Worker
+// Pages Functions - handles all API requests including WebSocket
 import app from '../../backend/src/router';
 import type { Env } from '../../backend/src/types/models';
 
@@ -11,14 +11,6 @@ interface PagesEnv extends Env {
 export const onRequest: PagesFunction<PagesEnv> = async (context) => {
   const { request, env, waitUntil } = context;
   
-  // Handle WebSocket upgrades - proxy to Durable Objects Worker
-  if (request.headers.get('Upgrade') === 'websocket') {
-    console.log('WebSocket upgrade request - proxying to Durable Objects Worker');
-    
-    // Forward to Durable Objects Worker via service binding
-    return env.DURABLE_OBJECTS_WORKER.fetch(request);
-  }
-
-  // Handle regular HTTP requests with Hono
+  // Handle all requests (including WebSocket) through Hono router
   return app.fetch(request, env, waitUntil);
 };

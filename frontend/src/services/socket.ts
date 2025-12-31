@@ -3,21 +3,20 @@ const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8787';
 class SocketService {
   private socket: WebSocket | null = null;
   private roomCode: string | null = null;
-  private playerId: string | null = null;
   private eventHandlers: Map<string, Set<(...args: any[]) => void>> = new Map();
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
 
-  connect(roomCode: string, playerId: string): Promise<WebSocket> {
+  connect(roomCode: string): Promise<WebSocket> {
     if (this.socket?.readyState === WebSocket.OPEN) {
       return Promise.resolve(this.socket);
     }
 
     this.roomCode = roomCode;
-    this.playerId = playerId;
 
-    const wsUrl = `${WS_URL}/api/ws?roomCode=${roomCode}&playerId=${playerId}`;
+    // Only pass roomCode - authentication happens via session cookie
+    const wsUrl = `${WS_URL}/api/ws?roomCode=${roomCode}`;
     this.socket = new WebSocket(wsUrl);
 
     return new Promise((resolve, reject) => {
@@ -49,11 +48,11 @@ class SocketService {
   }
 
   private attemptReconnect() {
-    if (this.reconnectAttempts < this.maxReconnectAttempts && this.roomCode && this.playerId) {
+    if (this.reconnectAttempts < this.maxReconnectAttempts && this.roomCode) {
       this.reconnectAttempts++;
       console.log(`Reconnecting... Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
       setTimeout(() => {
-        this.connect(this.roomCode!, this.playerId!);
+        this.connect(this.roomCode!);
       }, this.reconnectDelay * this.reconnectAttempts);
     }
   }
@@ -74,7 +73,6 @@ class SocketService {
       this.socket.close();
       this.socket = null;
       this.roomCode = null;
-      this.playerId = null;
     }
   }
 

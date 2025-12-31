@@ -66,7 +66,7 @@ export function createSessionCookie(token: string, maxAge: number = 4 * 60 * 60)
     `session=${token}`,
     'HttpOnly', // Prevent JavaScript access
     'Secure', // HTTPS only
-    'SameSite=Strict', // Same origin - maximum security!
+    'SameSite=Lax', // Allow top-level navigation while protecting against CSRF
     'Path=/',
     `Max-Age=${maxAge}`,
   ];

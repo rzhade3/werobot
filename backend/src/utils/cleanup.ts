@@ -16,18 +16,20 @@ export async function performScheduledCleanup(env: Env): Promise<{
     console.log(`Found ${expiredRoomCodes.length} expired rooms to cleanup`);
 
     // 2. Notify Durable Objects to cleanup (close WebSockets, clear state)
-    for (const roomCode of expiredRoomCodes) {
-      try {
-        const durableId = env.GAME_ROOM.idFromName(roomCode);
-        const stub = env.GAME_ROOM.get(durableId);
+    if (env.GAME_ROOM) {
+      for (const roomCode of expiredRoomCodes) {
+        try {
+          const durableId = env.GAME_ROOM.idFromName(roomCode);
+          const stub = env.GAME_ROOM.get(durableId);
 
-        // Send cleanup signal to Durable Object
-        await stub.fetch('https://internal/cleanup', {
-          method: 'POST',
-        });
-      } catch (err) {
-        console.error(`Failed to cleanup Durable Object for room ${roomCode}:`, err);
-        // Continue with database cleanup even if DO cleanup fails
+          // Send cleanup signal to Durable Object
+          await stub.fetch('https://internal/cleanup', {
+            method: 'POST',
+          });
+        } catch (err) {
+          console.error(`Failed to cleanup Durable Object for room ${roomCode}:`, err);
+          // Continue with database cleanup even if DO cleanup fails
+        }
       }
     }
 

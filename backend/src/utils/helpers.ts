@@ -60,10 +60,10 @@ export function parseCookies(cookieHeader: string | null): Record<string, string
 }
 
 // Session cookie creation - secure for same-origin deployment
-export function createSessionCookie(token: string, maxAge: number = 4 * 60 * 60): string {
+export function createSessionCookie(token: string, roomCode: string, maxAge: number = 4 * 60 * 60): string {
   // Base cookie attributes
   const attributes = [
-    `session=${token}`,
+    `session_${roomCode}=${token}`,
     'HttpOnly', // Prevent JavaScript access
     'Secure', // HTTPS only
     'SameSite=Lax', // Allow top-level navigation while protecting against CSRF
@@ -124,9 +124,9 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 // Session helpers
-export async function getSession(request: Request, env: any): Promise<SessionData | null> {
+export async function getSession(request: Request, env: any, roomCode: string): Promise<SessionData | null> {
   const cookies = parseCookies(request.headers.get('Cookie'));
-  const sessionToken = cookies['session'];
+  const sessionToken = cookies[`session_${roomCode}`];
 
   if (!sessionToken) return null;
 
@@ -167,9 +167,9 @@ export async function createSession(
   return sessionToken;
 }
 
-export async function deleteSession(request: Request, env: any): Promise<void> {
+export async function deleteSession(request: Request, env: any, roomCode: string): Promise<void> {
   const cookies = parseCookies(request.headers.get('Cookie'));
-  const sessionToken = cookies['session'];
+  const sessionToken = cookies[`session_${roomCode}`];
 
   if (sessionToken) {
     await env.SESSIONS.delete(sessionToken);
@@ -180,9 +180,10 @@ export async function deleteSession(request: Request, env: any): Promise<void> {
 export async function verifySession(
   request: Request,
   env: any,
-  db: any
+  db: any,
+  roomCode: string
 ): Promise<{ valid: boolean; playerId?: string; session?: SessionData }> {
-  const session = await getSession(request, env);
+  const session = await getSession(request, env, roomCode);
   if (!session) {
     return { valid: false };
   }

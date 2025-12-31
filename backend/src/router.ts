@@ -58,7 +58,13 @@ app.use('*', async (c, next) => {
 // Verifies: 1) Session exists, 2) Not expired, 3) Player still exists in DB
 const requireAuth = async (c: any, next: any) => {
   const db: DatabaseQueries = c.get('db');
-  const verification = await verifySession(c.req.raw, c.env, db);
+  const roomCode = c.req.param('roomCode');
+  
+  if (!roomCode) {
+    return c.json({ success: false, error: 'Room code required' }, 400);
+  }
+  
+  const verification = await verifySession(c.req.raw, c.env, db, roomCode);
   
   if (!verification.valid || !verification.session) {
     return c.json({ success: false, error: 'Unauthorized - Please join a room first' }, 401);
@@ -193,7 +199,7 @@ app.post('/api/rooms', async (c) => {
       },
     }, 201);
     
-    response.headers.set('Set-Cookie', createSessionCookie(sessionToken));
+    response.headers.set('Set-Cookie', createSessionCookie(sessionToken, room.roomCode));
     return response;
   } catch (error) {
     console.error('ERROR in createRoom:', error);
@@ -232,7 +238,7 @@ app.post('/api/rooms/:roomCode/join', async (c) => {
   const db: DatabaseQueries = c.get('db');
   
   // Check if user already has an active session for this room
-  const existingSession = await getSession(c.req.raw, c.env);
+  const existingSession = await getSession(c.req.raw, c.env, roomCode);
   if (existingSession && existingSession.roomCode === roomCode) {
     // User already has a session for this room
     const player = await db.getPlayerById(existingSession.playerId);
@@ -277,7 +283,7 @@ app.post('/api/rooms/:roomCode/join', async (c) => {
     },
   });
   
-  response.headers.set('Set-Cookie', createSessionCookie(sessionToken));
+  response.headers.set('Set-Cookie', createSessionCookie(sessionToken, roomCode));
   return response;
 });
 
@@ -287,7 +293,7 @@ app.delete('/api/rooms/:roomCode/leave', requireAuth, requireRoomAccess, async (
 
   const db: DatabaseQueries = c.get('db');
   await db.deletePlayer(session.playerId);
-  await deleteSession(c.req.raw, c.env);
+  await deleteSession(c.req.raw, c.env, roomCode);
 
   await broadcastToRoom(c, roomCode, 'player:left');
 
@@ -766,7 +772,7 @@ app.get('/api/ws', async (c) => {
 
   // Verify session via cookie
   const db: DatabaseQueries = c.get('db');
-  const verification = await verifySession(c.req.raw, c.env, db);
+  const verification = await verifySession(c.req.raw, c.env, db, roomCode);
   
   if (!verification.valid || !verification.session) {
     return c.json({ success: false, error: 'Unauthorized - Invalid session' }, 401);

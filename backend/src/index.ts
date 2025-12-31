@@ -39,6 +39,11 @@ async function handleWebSocketUpgrade(request: Request, env: Env): Promise<Respo
     return new Response('Missing roomCode or playerId', { status: 400 });
   }
 
+  // Check if GAME_ROOM binding exists (direct Workers deployment)
+  if (!env.GAME_ROOM) {
+    return new Response('Durable Objects not configured', { status: 500 });
+  }
+
   // Get or create Durable Object for this room
   const durableId = env.GAME_ROOM.idFromName(roomCode);
   const stub = env.GAME_ROOM.get(durableId);

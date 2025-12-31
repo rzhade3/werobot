@@ -7,7 +7,6 @@ export interface Player {
   id: string;
   roomId: string;
   name: string;
-  passwordHash: string;
   isAI: boolean;
   isEliminated: boolean;
   isHost: boolean;
@@ -145,7 +144,6 @@ export function generateId(): string {
 export function createPlayer(
   roomId: string,
   name: string,
-  passwordHash: string,
   isHost: boolean = false,
   isAI: boolean = false
 ): Omit<Player, 'createdAt'> {
@@ -153,7 +151,6 @@ export function createPlayer(
     id: generateId(),
     roomId,
     name,
-    passwordHash,
     isAI,
     isEliminated: false,
     isHost,

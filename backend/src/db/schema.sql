@@ -26,7 +26,6 @@ CREATE TABLE IF NOT EXISTS players (
   id TEXT PRIMARY KEY,
   room_id TEXT NOT NULL,
   name TEXT NOT NULL,
-  password_hash TEXT NOT NULL,
   is_ai BOOLEAN DEFAULT 0,
   is_eliminated BOOLEAN DEFAULT 0,
   is_host BOOLEAN DEFAULT 0,

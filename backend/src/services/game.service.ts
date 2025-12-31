@@ -4,7 +4,6 @@ import type { Env, Player, Round, Answer } from '../types/models';
 import { DatabaseQueries } from '../db/queries';
 import { createRound, createAnswer, createPlayer } from '../types/models';
 import { generateAIAnswer, rankAnswersForVote } from './ai.service';
-import { generatePassword, hashPassword } from '../utils/helpers';
 
 export class GameService {
   private db: DatabaseQueries;
@@ -32,9 +31,7 @@ export class GameService {
   }
 
   async addAIPlayer(roomId: string): Promise<Player> {
-    const password = generatePassword();
-    const passwordHash = await hashPassword(password);
-    const aiPlayer = createPlayer(roomId, 'AI Player', passwordHash, false, true);
+    const aiPlayer = createPlayer(roomId, 'AI Player', false, true);
     return this.db.createPlayer(aiPlayer);
   }
 

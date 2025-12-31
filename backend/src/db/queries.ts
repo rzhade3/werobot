@@ -55,14 +55,13 @@ export class DatabaseQueries {
   async createPlayer(player: Omit<Player, 'createdAt'>): Promise<Player> {
     await this.db
       .prepare(
-        `INSERT INTO players (id, room_id, name, password_hash, is_ai, is_eliminated, is_host, score)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO players (id, room_id, name, is_ai, is_eliminated, is_host, score)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
       )
       .bind(
         player.id,
         player.roomId,
         player.name,
-        player.passwordHash,
         player.isAI ? 1 : 0,
         player.isEliminated ? 1 : 0,
         player.isHost ? 1 : 0,
@@ -357,7 +356,6 @@ export class DatabaseQueries {
       id: row.id,
       roomId: row.room_id,
       name: row.name,
-      passwordHash: row.password_hash,
       isAI: Boolean(row.is_ai),
       isEliminated: Boolean(row.is_eliminated),
       isHost: Boolean(row.is_host),

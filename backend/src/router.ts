@@ -14,8 +14,6 @@ import {
   createSession,
   deleteSession,
   getSession,
-  generatePassword,
-  hashPassword,
   verifySession,
 } from './utils/helpers';
 import { createRoom, createPlayer, createPrompt, createVote } from './types/models';
@@ -172,12 +170,8 @@ app.post('/api/rooms', async (c) => {
 
     const db: DatabaseQueries = c.get('db');
     
-    // Generate password for the host player
-    const password = generatePassword();
-    const passwordHash = await hashPassword(password);
-    
     // Create host player
-    const hostPlayer = createPlayer('temp', body.playerName, passwordHash, true, false);
+    const hostPlayer = createPlayer('temp', body.playerName, true, false);
     
     // Create room
     const room = createRoom(hostPlayer.id);
@@ -265,12 +259,8 @@ app.post('/api/rooms/:roomCode/join', async (c) => {
     return c.json({ success: false, error: 'Room is full' }, 400);
   }
 
-  // Generate password for the new player
-  const password = generatePassword();
-  const passwordHash = await hashPassword(password);
-
   // Create player
-  const player = createPlayer(room.id, body.playerName, passwordHash, false, false);
+  const player = createPlayer(room.id, body.playerName, false, false);
   await db.createPlayer(player);
 
   // Create session (no password needed - session token is sufficient)

@@ -71,9 +71,8 @@ async function getExpiredRoomCodes(db: D1Database, ttlHours: number): Promise<st
     .prepare(`
       SELECT room_code 
       FROM rooms 
-      WHERE datetime(expires_at) < datetime('now', '-' || ? || ' hours')
+      WHERE datetime(expires_at) < datetime('now')
     `)
-    .bind(ttlHours)
     .all();
 
   return result.results.map((row: any) => row.room_code);
@@ -83,9 +82,8 @@ async function cleanupExpiredRooms(db: D1Database, ttlHours: number): Promise<nu
   const result = await db
     .prepare(`
       DELETE FROM rooms 
-      WHERE datetime(expires_at) < datetime('now', '-' || ? || ' hours')
+      WHERE datetime(expires_at) < datetime('now')
     `)
-    .bind(ttlHours)
     .run();
 
   return result.meta.changes || 0;

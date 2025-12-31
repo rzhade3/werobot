@@ -15,8 +15,12 @@ class SocketService {
 
     this.roomCode = roomCode;
 
-    // Only pass roomCode - authentication happens via session cookie
-    const wsUrl = `${WS_URL}/api/ws?roomCode=${roomCode}`;
+    // Use same-origin WebSocket URL (works for both domains)
+    // In production, automatically uses current domain (wss://werobot.pages.dev or wss://werobot.zhade.dev)
+    // In development, falls back to REACT_APP_WS_URL or localhost
+    const wsUrl = process.env.NODE_ENV === 'production'
+      ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/ws?roomCode=${roomCode}`
+      : `${WS_URL}/api/ws?roomCode=${roomCode}`;
     this.socket = new WebSocket(wsUrl);
 
     return new Promise((resolve, reject) => {

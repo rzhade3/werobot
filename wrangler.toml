@@ -13,6 +13,7 @@ service = "werobot-durable-objects"
 binding = "DB"
 database_name = "werobot"
 database_id = "11be2786-6833-4ff5-925d-09719c806174"
+migrations_dir = "backend/src/db/deploy-migrations"
 
 # KV Storage
 [[kv_namespaces]]

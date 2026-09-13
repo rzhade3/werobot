@@ -12,7 +12,7 @@ binding = "DB"
 database_name = "werobot"
 database_id = "00000000-0000-0000-0000-000000000001"
 preview_database_id = "werobot-local"
-migrations_dir = "../backend/src/db/migrations"
+migrations_dir = "../backend/src/db/deploy-migrations"
 
 [[kv_namespaces]]
 binding = "SESSIONS"

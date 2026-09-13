@@ -1,7 +1,8 @@
 import axios from 'axios';
 import type { Room, Player, GameState, RoundData, AnswerForVoting } from '../types';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8787/api';
+const API_URL = process.env.REACT_APP_API_URL
+  || (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:8787/api');
 
 // Configure axios to send cookies with requests
 axios.defaults.withCredentials = true;

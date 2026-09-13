@@ -49,7 +49,7 @@ Local development is fully offline and uses deterministic fallback answers and
 votes. `local/wrangler.toml` intentionally omits the remote Workers AI binding,
 so `./dev-local.sh` does not require a Cloudflare login, account ID, or API key.
 The startup script also applies pending migrations from
-`backend/src/db/migrations` to the local D1 database automatically.
+`backend/src/db/deploy-migrations` to the local D1 database automatically.
 
 ### External API Fallback (Optional - Development Only)
 

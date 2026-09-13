@@ -187,14 +187,21 @@ All queries use prepared statements to prevent SQL injection.
 
 ### Migrations
 
-Database migrations are stored in `backend/src/db/migrations/`:
+Active database migrations are stored in
+`backend/src/db/deploy-migrations/`. The older files in
+`backend/src/db/migrations/` are legacy history and must not be applied to
+production.
 
 ```bash
-# Apply schema
-npx wrangler d1 execute werobot --file=./backend/src/db/schema.sql
+# Create a migration
+npx wrangler --config wrangler.toml d1 migrations create werobot add-example-column
 
-# Apply migration
-npx wrangler d1 execute werobot --file=./backend/src/db/migrations/001_add_password_hash.sql
+# Apply pending local migrations
+npx wrangler --config local/wrangler.toml d1 migrations apply werobot \
+  --local --persist-to local/.wrangler/state
+
+# Apply pending production migrations
+npx wrangler --config wrangler.toml d1 migrations apply werobot --remote
 ```
 
 ### Local Development

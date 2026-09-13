@@ -37,7 +37,7 @@ echo ""
 
 # Step 5: Deploy Pages (frontend + API via Functions)
 echo "📤 Step 5: Deploying Pages with Functions..."
-npx wrangler pages deploy frontend/build --project-name=werobot --branch=production --commit-dirty=true
+npx wrangler pages deploy frontend/build --project-name=werobot --branch=main --commit-dirty=true
 echo ""
 
 echo "✅ Deployment complete!"

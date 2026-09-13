@@ -220,7 +220,7 @@ To deploy to production (main branch):
 
 Or manually:
 ```bash
-npx wrangler pages deploy frontend/build --project-name=werobot --branch=production
+npx wrangler pages deploy frontend/build --project-name=werobot --branch=main
 ```
 
 ### Preview Deployment
@@ -237,6 +237,6 @@ npx wrangler pages deploy frontend/build --project-name=werobot --branch=preview
 - Useful for testing before pushing to production
 
 **Production deployments:**
-- Use `--branch=production`
+- Use `--branch=main`
 - Deploy to `https://werobot.pages.dev`
 - Update the live site immediately

@@ -2,6 +2,8 @@
 -- Password hashing is unnecessary since session tokens provide sufficient authentication
 
 -- SQLite doesn't support DROP COLUMN directly, so we need to recreate the table
+PRAGMA defer_foreign_keys = true;
+
 -- Create new players table without password_hash
 CREATE TABLE IF NOT EXISTS players_new (
   id TEXT PRIMARY KEY,

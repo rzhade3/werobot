@@ -29,14 +29,18 @@ type Variables = {
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// Add CORS for local development
-app.use('*', cors({
-  origin: ['http://localhost:3000', 'http://localhost:8787'],
+// Add CORS middleware
+app.use('*', (c, next) => cors({
+  origin: (origin) => {
+    if (c.env.CORS_ORIGIN) return origin === c.env.CORS_ORIGIN ? origin : null;
+    if (c.env.ENVIRONMENT !== 'production') return origin;
+    return null;
+  },
   credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'Cookie'],
   exposeHeaders: ['Set-Cookie'],
-}));
+})(c, next));
 
 // Database and service initialization middleware
 app.use('*', async (c, next) => {

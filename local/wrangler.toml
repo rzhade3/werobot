@@ -1,0 +1,24 @@
+name = "werobot-local"
+pages_build_output_dir = "public"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[[services]]
+binding = "DURABLE_OBJECTS_WORKER"
+service = "werobot-durable-objects"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "werobot"
+database_id = "00000000-0000-0000-0000-000000000001"
+preview_database_id = "werobot-local"
+migrations_dir = "../backend/src/db/migrations"
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "00000000000000000000000000000001"
+
+[vars]
+ENVIRONMENT = "development"
+ROOM_TTL_HOURS = "6"
+CLEANUP_BATCH_SIZE = "100"

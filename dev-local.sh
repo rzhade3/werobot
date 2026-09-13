@@ -19,6 +19,10 @@ if [ ! -f ".dev.vars" ]; then
     echo -e "${RED}Error: .dev.vars file not found in root directory${NC}"
     echo "Creating .dev.vars with default values..."
     cat > .dev.vars << 'EOF'
+# Configurable Ports for Local Development
+# FRONTEND_PORT=3000
+# PAGES_PORT=8787
+
 # Optional: External API fallback (only works in non-production)
 # OPENAI_API_KEY=your-api-key-here
 # OPENAI_API_ENDPOINT=https://models.github.ai/inference/chat/completions
@@ -27,6 +31,33 @@ EOF
     echo -e "${GREEN}Created .dev.vars - Cloudflare AI will be used by default${NC}"
     echo -e "${GREEN}You can optionally configure external API fallback for development${NC}"
 fi
+
+# Function to load env files safely
+load_env_file() {
+    local file="$1"
+    if [ -f "$file" ]; then
+        while IFS= read -r line || [ -n "$line" ]; do
+            # Trim leading/trailing whitespace
+            line=$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            # Ignore comments and empty lines
+            if [[ -n "$line" && ! "$line" =~ ^# ]]; then
+                export "$line" 2>/dev/null || true
+            fi
+        done < "$file"
+    fi
+}
+
+load_env_file ".dev.vars"
+load_env_file ".env"
+
+# Environment Variable Configurations with Defaults
+PAGES_PORT="${PAGES_PORT:-${BACKEND_PORT:-8787}}"
+FRONTEND_PORT="${FRONTEND_PORT:-${PORT:-3000}}"
+HOST="${HOST:-localhost}"
+
+FRONTEND_URL="http://${HOST}:${FRONTEND_PORT}"
+BACKEND_URL="http://${HOST}:${PAGES_PORT}"
+WS_URL="ws://${HOST}:${PAGES_PORT}"
 
 # Function to kill background processes on exit
 cleanup() {
@@ -56,27 +87,39 @@ echo ""
 echo -e "${GREEN}✓ Dependencies installed${NC}"
 echo ""
 
-# Start Durable Objects Worker
-echo -e "${BLUE}Step 2: Starting Durable Objects Worker on port 8788...${NC}"
-cd durable-objects-worker
-npx wrangler dev --port 8788 --local --var ENVIRONMENT:development > ../durable-objects.log 2>&1 &
-DO_PID=$!
-cd ..
-sleep 3
+# Apply any pending local D1 migrations. Wrangler records applied migrations,
+# so each migration runs only once.
+echo -e "${BLUE}Step 2: Applying local database migrations...${NC}"
+npx wrangler \
+  --config local/wrangler.toml \
+  d1 migrations apply werobot \
+  --local \
+  --persist-to local/.wrangler/state > /dev/null
+echo -e "${GREEN}✓ Local database migrations applied${NC}"
+echo ""
 
-# Start Pages dev server
-echo -e "${BLUE}Step 3: Starting Cloudflare Pages dev server on port 8787...${NC}"
-npx wrangler pages dev frontend/public --port 8787 --local \
-  --binding DB=local --binding SESSIONS=local \
-  --service DURABLE_OBJECTS_WORKER=werobot-durable-objects \
-  --compatibility-date=2024-01-01 \
-  --compatibility-flag=nodejs_compat > pages.log 2>&1 &
-PAGES_PID=$!
+# Start the Pages API and Durable Objects worker together.
+# The local config omits the remote Workers AI binding.
+echo -e "${BLUE}Step 3: Starting local backend on port ${PAGES_PORT}...${NC}"
+(
+  cd local
+  ../node_modules/.bin/wrangler \
+    --config wrangler.toml \
+    --config ../durable-objects-worker/wrangler.toml \
+    pages dev public \
+    --port "${PAGES_PORT}" \
+    --persist-to .wrangler/state \
+    --local
+) > pages.log 2>&1 &
+BACKEND_PID=$!
 sleep 5
 
 # Start frontend dev server
-echo -e "${BLUE}Step 4: Starting React frontend on port 3000...${NC}"
+echo -e "${BLUE}Step 4: Starting React frontend on port ${FRONTEND_PORT}...${NC}"
 cd frontend
+PORT="${FRONTEND_PORT}" \
+REACT_APP_API_URL="${REACT_APP_API_URL:-${BACKEND_URL}/api}" \
+REACT_APP_WS_URL="${REACT_APP_WS_URL:-${WS_URL}}" \
 npm start > ../frontend.log 2>&1 &
 FRONTEND_PID=$!
 cd ..
@@ -88,16 +131,15 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo -e "${GREEN}🎮 We, Robot is running!${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo -e "  Frontend:  ${BLUE}http://localhost:3000${NC}"
-echo -e "  Backend:   ${BLUE}http://localhost:8787${NC}"
-echo -e "  WebSocket: ${BLUE}ws://localhost:8787${NC}"
+echo -e "  Frontend:  ${BLUE}${FRONTEND_URL}${NC}"
+echo -e "  Backend:   ${BLUE}${BACKEND_URL}${NC}"
+echo -e "  WebSocket: ${BLUE}${WS_URL}${NC}"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "Logs:"
-echo "  Durable Objects: tail -f durable-objects.log"
-echo "  Pages/API:       tail -f pages.log"
-echo "  Frontend:        tail -f frontend.log"
+echo "  Backend:  tail -f pages.log"
+echo "  Frontend: tail -f frontend.log"
 echo ""
 echo "Press Ctrl+C to stop all services"
 echo ""

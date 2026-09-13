@@ -40,21 +40,36 @@ Visit: http://localhost:3000
 
 ### Cloudflare AI (Default)
 
-**No configuration needed!** The app uses Cloudflare Workers AI by default with:
+Production uses Cloudflare Workers AI by default with:
 - Model: `@cf/meta/llama-3.3-70b-instruct-fp8-fast`
 - Free tier: 10,000 AI inferences per day
-- Configured automatically via `wrangler.toml`
+- Configured via `wrangler.toml`
+
+Local development is fully offline and uses deterministic fallback answers and
+votes. `local/wrangler.toml` intentionally omits the remote Workers AI binding,
+so `./dev-local.sh` does not require a Cloudflare login, account ID, or API key.
+The startup script also applies pending migrations from
+`backend/src/db/migrations` to the local D1 database automatically.
 
 ### External API Fallback (Optional - Development Only)
 
 For development/testing, you can optionally configure an external API as a fallback. This **only works when ENVIRONMENT is not "production"**.
 
-**Local Development** (`.dev.vars` in root directory):
+**Local Development** (`.dev.vars` or `.env` in root directory):
 ```env
+# Optional: Configurable Ports
+FRONTEND_PORT=3000
+PAGES_PORT=8787
+
 # Optional: External API fallback (only works in non-production)
 OPENAI_API_KEY=your-api-key
 OPENAI_API_ENDPOINT=https://models.github.ai/inference/chat/completions
 OPENAI_MODEL=openai/gpt-4.1
+```
+
+Custom ports can also be passed inline when running development scripts:
+```bash
+FRONTEND_PORT=3001 PAGES_PORT=8790 ./dev-local.sh
 ```
 
 **Production** uses Cloudflare AI exclusively. External API secrets are ignored in production.
@@ -93,11 +108,9 @@ grep -A 3 "services" wrangler.toml
 
 ### Database Errors
 ```bash
-# Check database exists
-npx wrangler d1 list
-
-# Re-run migrations
-npx wrangler d1 execute werobot --file=./backend/src/db/schema.sql
+# Apply pending local migrations
+npx wrangler --config local/wrangler.toml d1 migrations apply werobot \
+  --local --persist-to local/.wrangler/state
 
 # View database documentation
 # See docs/DATABASE.md for detailed schema and troubleshooting

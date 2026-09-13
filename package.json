@@ -2,8 +2,8 @@
   "scripts": {
     "dev": "npm run build:frontend && npm run dev:all",
     "dev:all": "concurrently \"npm run dev:do\" \"npm run dev:pages\"",
-    "dev:do": "cd durable-objects-worker && npx wrangler dev --port 8788 --local",
-    "dev:pages": "npx wrangler pages dev frontend/build --port 8787 --local --compatibility-date=2024-01-01 --compatibility-flag=nodejs_compat",
+    "dev:do": "cd durable-objects-worker && npx wrangler dev --port ${DO_PORT:-8788} --local",
+    "dev:pages": "npx wrangler pages dev frontend/build --port ${PAGES_PORT:-8787} --local --compatibility-date=2024-01-01 --compatibility-flag=nodejs_compat",
     "build:frontend": "cd frontend && npm run build",
     "dev:frontend-only": "cd frontend && npm start"
   },

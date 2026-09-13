@@ -9,6 +9,26 @@ echo "This runs only the frontend with mock/production API."
 echo "For full local backend, use ./dev-local.sh instead."
 echo ""
 
+# Function to load env files safely
+load_env_file() {
+    local file="$1"
+    if [ -f "$file" ]; then
+        while IFS= read -r line || [ -n "$line" ]; do
+            line=$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            if [[ -n "$line" && ! "$line" =~ ^# ]]; then
+                export "$line" 2>/dev/null || true
+            fi
+        done < "$file"
+    fi
+}
+
+load_env_file ".dev.vars"
+load_env_file ".env"
+
+FRONTEND_PORT="${FRONTEND_PORT:-${PORT:-3000}}"
+HOST="${HOST:-localhost}"
+FRONTEND_URL="http://${HOST}:${FRONTEND_PORT}"
+
 cd frontend
 
 # Check if node_modules exists
@@ -17,11 +37,11 @@ if [ ! -d "node_modules" ]; then
     npm install
 fi
 
-echo "Starting React development server..."
+echo "Starting React development server on port ${FRONTEND_PORT}..."
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🎮 Frontend running at: http://localhost:3000"
+echo "🎮 Frontend running at: ${FRONTEND_URL}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-npm start
+PORT="${FRONTEND_PORT}" npm start

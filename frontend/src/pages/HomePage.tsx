@@ -48,7 +48,7 @@ export const HomePage: React.FC = () => {
     setError('');
 
     try {
-      const response = await apiService.joinRoom(roomCode.toUpperCase().trim(), playerName.trim());
+      await apiService.joinRoom(roomCode.toUpperCase().trim(), playerName.trim());
       
       // Navigate immediately - session cookie is set
       navigate(`/room/${roomCode.toUpperCase().trim()}`);

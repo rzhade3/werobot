@@ -14,7 +14,6 @@ export const RoomPage: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>('lobby');
   const [playerId, setPlayerId] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!roomCode) {
@@ -76,16 +75,6 @@ export const RoomPage: React.FC = () => {
       <div className="App">
         <div className="container">
           <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="App">
-        <div className="container">
-          <div className="error-message">{error}</div>
         </div>
       </div>
     );

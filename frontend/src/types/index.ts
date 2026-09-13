@@ -76,4 +76,5 @@ export interface RoundData {
 export interface Winner {
   winner: Player;
   playerVotes: Record<string, number>;
+  playerScores: Record<string, number>;
 }

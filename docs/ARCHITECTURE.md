@@ -129,16 +129,16 @@ we-robot/
 - Random prompt displayed
 - All players (including AI) submit answers trying to sound AI-like
 - Voting phase begins
-- Players vote for who they think is a HUMAN
-- AI votes for who it thinks is most human
-- Votes are accumulated across all rounds
+- Players vote for the answer they think was written by AI
+- AI votes for the answer it thinks sounds most AI-like
+- Players earn points for correctly identifying AI and for fooling others
 
 ### 3. End Game
 - After all rounds are complete
-- Player with the LEAST total votes wins
-- Fewer votes means you successfully fooled others into thinking you're AI
-- If AI has the least votes, AI wins
-- If a human has the least votes, that human wins
+- Human player with the MOST total points wins
+- A player gets 1 point for correctly voting for the real AI answer
+- A human answer author gets 1 point whenever another human votes for their answer as AI
+- AI is the target, not eligible to win
 
 ## Security Features
 

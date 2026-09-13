@@ -2,23 +2,22 @@
 
 ## AI Answer Generation
 
-The AI player tries to sound AI-like with:
-- Formal, structured language
-- Perfect grammar and spelling
-- Objective, analytical responses
-- Lack of personal experiences or emotions
-- Detailed, comprehensive answers
-- Technical or precise wording
+The AI player tries to sound human-like with:
+- Conversational, casual language
+- Imperfect but readable phrasing
+- Personal opinions and emotions
+- Brief, natural responses
+- Less formal structure
 
 ## AI Voting Logic
 
-The AI evaluates each answer to identify humans:
-- Looks for natural, casual language patterns
-- Identifies personal experiences or emotions
-- Spots informal grammar or conversational tone
-- Detects humor, wit, or subjective opinions
+The AI evaluates each answer to identify AI-like responses:
+- Looks for overly formal or perfect language
+- Identifies generic, robotic, or repetitive phrasing
+- Spots answers with little personal touch or emotion
+- Detects excessive detail or typical AI response patterns
 
-The AI votes for who it thinks is most HUMAN. Since players with fewer votes win, the AI tries to give votes to humans while avoiding votes itself by sounding AI-like.
+The AI votes for the answer it thinks is most AI-like. Human players score by correctly identifying the real AI answer or by fooling other humans into voting for their answer as AI.
 
 ## Configuration
 

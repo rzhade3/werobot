@@ -140,8 +140,8 @@ Your goal is to blend in with human players.`,
 }
 
 /**
- * Rank answers by how human they sound and return the most human-sounding answer ID
- * This is used for AI voting - the AI votes for the answer it thinks sounds most human
+ * Rank answers by how AI-like they sound and return the answer ID.
+ * This is used for AI voting - the AI votes for the answer it thinks is AI.
  */
 export async function rankAnswersForVote(
   prompt: string,
@@ -200,28 +200,21 @@ async function rankWithCloudflareAI(
     .map((a, idx) => `[${idx + 1}] ${a.text}`)
     .join('\n\n');
 
-  const rankingPrompt = `You are evaluating answers to determine which sounds most human and natural.
+  const rankingPrompt = `You are evaluating answers to determine which one sounds most like it was written by AI.
 
 Question: "${prompt}"
 
 Answers:
 ${answerList}
 
-Analyze each answer for human characteristics like:
-- Natural language and conversational tone
-- Minor imperfections or casual phrasing
-- Personal opinions or experiences
-- Humor or personality
-- Typical human response patterns
-
-Also analyze each answer for AI characteristics like:
+Analyze each answer for AI characteristics like:
 - Overly formal or perfect language
 - Lack of personal touch or emotion
 - Robotic or repetitive phrasing
 - Excessive detail or verbosity
 - Typical AI response patterns (like an em dash or overly structured answers)
 
-Respond with ONLY the number (1, 2, 3, etc.) of the answer that sounds MOST human. No explanation.`;
+Respond with ONLY the number (1, 2, 3, etc.) of the answer that sounds MOST like AI. No explanation.`;
 
   const messages = [
     {
@@ -275,28 +268,21 @@ async function rankWithExternalAPI(
     .map((a, idx) => `[${idx + 1}] ${a.text}`)
     .join('\n\n');
 
-  const rankingPrompt = `You are evaluating answers to determine which sounds most human and natural.
+  const rankingPrompt = `You are evaluating answers to determine which one sounds most like it was written by AI.
 
 Question: "${prompt}"
 
 Answers:
 ${answerList}
 
-Analyze each answer for human characteristics like:
-- Natural language and conversational tone
-- Minor imperfections or casual phrasing
-- Personal opinions or experiences
-- Humor or personality
-- Typical human response patterns
-
-Also analyze each answer for AI characteristics like:
+Analyze each answer for AI characteristics like:
 - Overly formal or perfect language
 - Lack of personal touch or emotion
 - Robotic or repetitive phrasing
 - Excessive detail or verbosity
 - Typical AI response patterns (like an em dash or overly structured answers)
 
-Respond with ONLY the number (1, 2, 3, etc.) of the answer that sounds MOST human. No explanation.`;
+Respond with ONLY the number (1, 2, 3, etc.) of the answer that sounds MOST like AI. No explanation.`;
 
   const response = await fetch(apiEndpoint, {
     method: 'POST',

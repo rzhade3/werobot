@@ -3,6 +3,7 @@ import { api } from '../../services/api';
 import { socketService } from '../../services/socket';
 import type { Player, RoundData, AnswerForVoting } from '../../types';
 import './Game.css';
+import './ScoreCard.css';
 
 interface GameProps {
   roomCode: string;
@@ -22,7 +23,8 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
   const [selectedAnswerId, setSelectedAnswerId] = useState('');
   const [hasVoted, setHasVoted] = useState(false);
   const [voteStatus, setVoteStatus] = useState({ total: 0, submitted: 0 });
-  const [voteCounts, setVoteCounts] = useState<Record<string, number>>({});
+  const [scoreBreakdown, setScoreBreakdown] = useState<Record<string, { foolPoints: number; detectPoints: number }>>({});
+  const [cumulativeScores, setCumulativeScores] = useState<Record<string, number>>({});
   const [playerAnswers, setPlayerAnswers] = useState<Record<string, string>>({});
   const [isHost, setIsHost] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -61,13 +63,12 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
         const result = await api.getRoundResults(roomCode, data.round.id);
         
         if (result.answers) {
-          const counts: Record<string, number> = {};
           const answerTexts: Record<string, string> = {};
           result.answers.forEach((answer: any) => {
-            counts[answer.playerId] = answer.votesReceived || 0;
             answerTexts[answer.playerId] = answer.answerText || '';
           });
-          setVoteCounts(counts);
+          setScoreBreakdown(result.scoreBreakdown || {});
+          setCumulativeScores(result.cumulativeScores || {});
           setPlayerAnswers(answerTexts);
         }
         
@@ -108,15 +109,14 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
     try {
       const result = await api.getRoundResults(roomCode, roundData.round.id);
       
-      // Build voteCounts and playerAnswers from answers
+      // Build playerAnswers, this round's breakdown, and running totals from the results payload
       if (result.answers) {
-        const counts: Record<string, number> = {};
         const answerTexts: Record<string, string> = {};
         result.answers.forEach((answer: any) => {
-          counts[answer.playerId] = answer.votesReceived || 0;
           answerTexts[answer.playerId] = answer.answerText || '';
         });
-        setVoteCounts(counts);
+        setScoreBreakdown(result.scoreBreakdown || {});
+        setCumulativeScores(result.cumulativeScores || {});
         setPlayerAnswers(answerTexts);
       }
       
@@ -272,7 +272,7 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
             {!hasSubmittedAnswer && !currentPlayer?.isEliminated ? (
               <form onSubmit={handleSubmitAnswer}>
                 <h3>Your Answer:</h3>
-                <p className="hint" id="answer-hint">Try to sound like AI to avoid getting votes!</p>
+                <p className="hint" id="answer-hint">Try to sound like AI so other players mistake your answer for the bot!</p>
                 <label htmlFor="answer-text" className="sr-only">Your answer to the prompt</label>
                 <textarea
                   id="answer-text"
@@ -309,13 +309,13 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
 
         {phase === 'voting' && (
           <section className="voting-phase" aria-labelledby="voting-heading">
-            <h2 id="voting-heading">Vote for the answer that sounds most HUMAN</h2>
-            <p className="hint" id="voting-hint">Remember: Human answers have personality, creativity, or imperfections!</p>
+            <h2 id="voting-heading">Vote for the answer you think was written by AI</h2>
+            <p className="hint" id="voting-hint">You earn a point if you find the real AI. Humans earn points when they fool you.</p>
 
             {!hasVoted && !currentPlayer?.isEliminated ? (
               <form onSubmit={handleSubmitVote}>
                 <fieldset className="answers-list">
-                  <legend className="sr-only">Choose the most human-sounding answer</legend>
+                  <legend className="sr-only">Choose the answer you think was written by AI</legend>
                   {answers.map((answer, index) => (
                     <label 
                       key={answer.id} 
@@ -364,35 +364,46 @@ export const Game: React.FC<GameProps> = ({ roomCode, playerId, onGameEnded }) =
           <section className="results-phase" aria-labelledby="results-heading">
             <h2 id="results-heading">Round {roundData.round.roundNumber} Results</h2>
 
-            <div className="vote-results">
-              <h3>Vote Summary</h3>
-              <ul className="vote-list">
-                {players
-                  .filter((p) => !p.isEliminated)
-                  .sort((a, b) => (voteCounts[b.id] || 0) - (voteCounts[a.id] || 0))
-                  .map((player) => (
-                    <li
-                      key={player.id}
-                      className="vote-item"
-                    >
-                      <div className="vote-item-header">
+            <ul className="score-list">
+              {players
+                .filter((p) => !p.isEliminated)
+                .sort((a, b) => (cumulativeScores[b.id] || 0) - (cumulativeScores[a.id] || 0))
+                .map((player, index) => {
+                  const breakdown = scoreBreakdown[player.id] || { foolPoints: 0, detectPoints: 0 };
+                  const roundTotal = breakdown.foolPoints + breakdown.detectPoints;
+                  const totalScore = cumulativeScores[player.id] || 0;
+                  const isLeader = index === 0 && totalScore > 0 && !player.isAI;
+
+                  const clauses: string[] = [];
+                  if (breakdown.detectPoints > 0) clauses.push('Spotted the AI (+1)');
+                  if (breakdown.foolPoints > 0) {
+                    clauses.push(`Fooled ${breakdown.foolPoints} ${breakdown.foolPoints === 1 ? 'player' : 'players'} (+${breakdown.foolPoints})`);
+                  }
+                  const detail = clauses.length > 0 ? clauses.join(' · ') : 'No points this round';
+
+                  return (
+                    <li key={player.id} className={`score-card ${isLeader ? 'leader' : ''} ${player.isAI ? 'ai' : ''}`}>
+                      <div className="score-card-header">
+                        <span className="score-rank" aria-hidden="true">{isLeader ? '👑' : `#${index + 1}`}</span>
                         <span className="player-name">
                           {player.name}
                           {player.isAI && <span className="ai-badge">AI</span>}
                         </span>
-                        <span className="vote-count">
-                          {voteCounts[player.id] || 0} {voteCounts[player.id] === 1 ? 'vote' : 'votes'}
-                        </span>
+                        {!player.isAI && (
+                          <span className="score-points">
+                            {totalScore} {totalScore === 1 ? 'point' : 'points'}
+                            {roundTotal > 0 && <span className="score-delta"> (+{roundTotal} this round)</span>}
+                          </span>
+                        )}
                       </div>
+                      <p className="score-detail">{player.isAI ? 'The AI does not score points' : detail}</p>
                       {playerAnswers[player.id] && (
-                        <div className="player-answer">
-                          <em>"{playerAnswers[player.id]}"</em>
-                        </div>
+                        <blockquote className="score-answer">"{playerAnswers[player.id]}"</blockquote>
                       )}
                     </li>
-                  ))}
-              </ul>
-            </div>
+                  );
+                })}
+            </ul>
 
             {gameEnded ? (
               // Game has ended - show button to view final results

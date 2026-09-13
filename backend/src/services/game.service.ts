@@ -145,46 +145,51 @@ export class GameService {
     return activePlayers.length;
   }
 
-  async determineWinner(roomId: string): Promise<{ winner: Player | null; playerVotes: Record<string, number> }> {
+  async determineWinner(roomId: string): Promise<{ winner: Player | null; playerVotes: Record<string, number>; playerScores: Record<string, number> }> {
     const allPlayers = await this.db.getPlayersByRoomId(roomId);
 
     console.log(`Determining winner for room ${roomId}:`, {
       totalPlayers: allPlayers.length,
     });
 
-    // Get aggregated votes using single SQL query - O(1) instead of O(n*m)
+    // Keep raw vote totals for result details, but score the game by detection and deception points.
     const playerVotes = await this.db.getPlayerVotesByRoomId(roomId);
+    const playerScores = await this.db.getPlayerScoresByRoomId(roomId);
     
-    // Initialize votes for players who didn't receive any votes
+    // Initialize totals for players who didn't receive any votes or points.
     for (const player of allPlayers) {
       if (playerVotes[player.id] === undefined) {
         playerVotes[player.id] = 0;
       }
+      if (playerScores[player.id] === undefined) {
+        playerScores[player.id] = 0;
+      }
     }
 
     console.log('Player votes:', playerVotes);
+    console.log('Player scores:', playerScores);
 
-    // Find player with minimum votes (excluding AI if present)
+    // Find human player with maximum score. AI is the target, not eligible to win.
     const humanPlayers = allPlayers.filter(p => !p.isAI);
     
     if (humanPlayers.length === 0) {
       console.warn('No human players found');
-      return { winner: null, playerVotes };
+      return { winner: null, playerVotes, playerScores };
     }
 
     let winner = humanPlayers[0];
-    let minVotes = playerVotes[winner.id] || 0;
+    let maxScore = playerScores[winner.id] || 0;
 
     for (const player of humanPlayers) {
-      const votes = playerVotes[player.id] || 0;
-      if (votes < minVotes) {
-        minVotes = votes;
+      const score = playerScores[player.id] || 0;
+      if (score > maxScore) {
+        maxScore = score;
         winner = player;
       }
     }
 
-    console.log(`Winner: ${winner.name} with ${minVotes} votes`);
-    return { winner, playerVotes };
+    console.log(`Winner: ${winner.name} with ${maxScore} points`);
+    return { winner, playerVotes, playerScores };
   }
 
   async isGameOver(roomId: string): Promise<boolean> {
@@ -242,7 +247,7 @@ export class GameService {
       return null;
     }
 
-    // Use AI to rank and pick the most human-sounding answer
+    // Use AI to rank and pick the most AI-like answer.
     const selectedAnswerId = await rankAnswersForVote(
       prompt.promptText,
       votableAnswers,

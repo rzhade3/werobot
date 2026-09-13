@@ -102,7 +102,7 @@ export const HomePage: React.FC = () => {
                 <Vote className="icon" />
               </div>
               <div>
-                <p>If you spot someone that looks like a human, vote them out!</p>
+                <p>Vote for the answer you think was written by AI</p>
               </div>
             </div>
 
@@ -111,7 +111,7 @@ export const HomePage: React.FC = () => {
                 <Trophy className="icon" />
               </div>
               <div>
-                <p>The human with the least votes wins!</p>
+                <p>Score points by detecting the AI and fooling other players</p>
               </div>
             </div>
           </div>

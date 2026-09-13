@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import type { Player } from '../../types';
 import './Results.css';
+import './ScoreCard.css';
 
 interface ResultsProps {
   roomCode: string;
@@ -15,7 +16,7 @@ export const Results: React.FC<ResultsProps> = ({ roomCode, playerId, onPlayAgai
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
-  const [playerVotes, setPlayerVotes] = useState<Record<string, number>>({});
+  const [playerScores, setPlayerScores] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -30,7 +31,7 @@ export const Results: React.FC<ResultsProps> = ({ roomCode, playerId, onPlayAgai
         
         setWinner(winnerData.winner);
         setPlayers(playersData.players);
-        setPlayerVotes(winnerData.playerVotes || {});
+        setPlayerScores(winnerData.playerScores || {});
         
         // Find current player
         const player = playersData.players.find(p => p.id === playerId);
@@ -86,7 +87,7 @@ export const Results: React.FC<ResultsProps> = ({ roomCode, playerId, onPlayAgai
               </h1>
               <p className="winner-subtitle">Congratulations!</p>
               <div className="winner-name human" aria-label={`Winner: ${winner.name}`}>{winner.name}</div>
-              <p className="winner-message">You received the fewest votes!</p>
+              <p className="winner-message">You scored the most points by detecting the AI and fooling other players!</p>
             </>
           ) : winner ? (
             // Current player didn't win
@@ -96,7 +97,7 @@ export const Results: React.FC<ResultsProps> = ({ roomCode, playerId, onPlayAgai
               </h1>
               <p className="winner-subtitle">Winner</p>
               <div className="winner-name human" aria-label={`Winner: ${winner.name}`}>{winner.name}</div>
-              <p className="winner-message">{winner.name} received the fewest votes and wins!</p>
+              <p className="winner-message">{winner.name} scored the most points and wins!</p>
             </>
           ) : (
             <>
@@ -109,22 +110,24 @@ export const Results: React.FC<ResultsProps> = ({ roomCode, playerId, onPlayAgai
         </section>
 
         <section className="players-summary" aria-labelledby="standings-heading">
-          <h2 id="standings-heading">Final Standings (by votes received)</h2>
-          <ul className="players-grid">
+          <h2 id="standings-heading">Final Standings</h2>
+          <ul className="score-grid">
             {players
-              .sort((a, b) => (playerVotes[a.id] || 0) - (playerVotes[b.id] || 0))
+              .sort((a, b) => (playerScores[b.id] || 0) - (playerScores[a.id] || 0))
               .map((player, index) => (
                 <li
                   key={player.id}
-                  className={`player-card ${index === 0 && !player.isAI ? 'winner' : ''} ${player.isAI ? 'ai' : ''}`}
+                  className={`score-card ${index === 0 && !player.isAI ? 'leader' : ''} ${player.isAI ? 'ai' : ''}`}
                 >
-                  <div className="player-rank" aria-label={`Rank ${index + 1}`}>{index === 0 ? '👑' : `#${index + 1}`}</div>
-                  <div className="player-name">
-                    {player.name}
-                    {player.isAI && <span className="ai-badge">AI</span>}
-                  </div>
-                  <div className="player-votes">
-                    {playerVotes[player.id] || 0} {(playerVotes[player.id] || 0) === 1 ? 'vote' : 'votes'}
+                  <div className="score-card-header">
+                    <span className="score-rank" aria-label={`Rank ${index + 1}`}>{index === 0 ? '👑' : `#${index + 1}`}</span>
+                    <span className="player-name">
+                      {player.name}
+                      {player.isAI && <span className="ai-badge">AI</span>}
+                    </span>
+                    <span className="score-points">
+                      {playerScores[player.id] || 0} {(playerScores[player.id] || 0) === 1 ? 'point' : 'points'}
+                    </span>
                   </div>
                 </li>
               ))}

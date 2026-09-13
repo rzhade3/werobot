@@ -1,0 +1,134 @@
+/* Shared score card styles used by round results (Game.tsx) and final standings (Results.tsx) */
+
+.score-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 30px 0;
+}
+
+.score-grid .score-card {
+  text-align: center;
+}
+
+.score-grid .score-card-header {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.score-card {
+  background: white;
+  border: 2px solid #ede9fe;
+  border-radius: 10px;
+  padding: 16px 20px;
+  text-align: left;
+}
+
+.score-card.leader {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.score-card.ai {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.score-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.score-rank {
+  font-weight: 700;
+  color: #9333ea;
+  min-width: 28px;
+}
+
+.score-card .player-name {
+  flex: 1;
+  font-weight: 600;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.score-list .player-name {
+  justify-content: flex-start;
+}
+
+.ai-badge {
+  background: #9333ea;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.score-points {
+  font-weight: 700;
+  color: #9333ea;
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+.score-delta {
+  font-weight: 600;
+  color: #16a34a;
+  font-size: 0.85rem;
+}
+
+.score-detail {
+  margin: 8px 0 0 38px;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.score-answer {
+  margin: 10px 0 0 38px;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #ede9fe;
+  font-size: 0.95rem;
+  color: #4b5563;
+  font-style: normal;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .score-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .score-card {
+    padding: 12px 15px;
+  }
+
+  .score-detail,
+  .score-answer {
+    margin-left: 0;
+    margin-top: 8px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+}

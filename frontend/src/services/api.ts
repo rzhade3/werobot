@@ -105,7 +105,13 @@ export const api = {
 
   getRoundResults: async (roomCode: string, roundId: string) => {
     const res = await axios.get(`${API_URL}/rooms/${roomCode}/rounds/current/results?roundId=${roundId}`, { withCredentials: true });
-    return extractData<{ answers: any[]; gameEnded: boolean }>(res.data);
+    return extractData<{
+      answers: any[];
+      roundScores: Record<string, number>;
+      scoreBreakdown: Record<string, { foolPoints: number; detectPoints: number }>;
+      cumulativeScores: Record<string, number>;
+      gameEnded: boolean;
+    }>(res.data);
   },
 
   continueToNextRound: async (roomCode: string) => {
@@ -116,7 +122,7 @@ export const api = {
   // Game results
   getWinner: async (roomCode: string) => {
     const res = await axios.get(`${API_URL}/rooms/${roomCode}/winner`, { withCredentials: true });
-    return extractData<{ winner: Player | null; allPlayers: Player[]; playerVotes: Record<string, number> }>(res.data);
+    return extractData<{ winner: Player | null; allPlayers: Player[]; playerVotes: Record<string, number>; playerScores: Record<string, number> }>(res.data);
   },
 };
 

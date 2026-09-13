@@ -10,11 +10,11 @@ A real-time multiplayer game where players try to sound as AI-like as possible t
 2. **Players Join** - Others join using the room code
 3. **Submit Prompts** - Each player submits a creative prompt
 4. **Answer Questions** - Players try to sound as AI-like as possible in their responses
-5. **Vote** - Each round, vote for who you think is a HUMAN
+5. **Vote** - Each round, vote for the answer you think was written by AI
 6. **Win Condition**:
-   - **Player with the LEAST votes wins** at the end of the game
-   - Fewer votes means others think you sound like AI
-   - The goal is to convince others you're AI, not human
+   - **Player with the MOST points wins** at the end of the game
+   - Correctly identify the real AI answer to earn a point
+   - Fool other players into voting for your answer as AI to earn points
 
 ## 📚 Documentation
 

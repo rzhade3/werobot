@@ -335,6 +335,116 @@ export class DatabaseQueries {
     return playerVotes;
   }
 
+  async getPlayerScoresByRoomId(roomId: string): Promise<Record<string, number>> {
+    const { results } = await this.db
+      .prepare(
+        `SELECT scorer_id, SUM(points) as total_score
+         FROM (
+           SELECT
+             CASE
+               WHEN answer_players.is_ai = 1 THEN voters.id
+               ELSE answer_players.id
+             END as scorer_id,
+             1 as points
+           FROM votes
+           INNER JOIN rounds ON votes.round_id = rounds.id
+           INNER JOIN players voters ON votes.voter_id = voters.id
+           INNER JOIN answers ON votes.voted_for_answer_id = answers.id
+           INNER JOIN players answer_players ON answers.player_id = answer_players.id
+           WHERE rounds.room_id = ? AND voters.is_ai = 0
+         )
+         GROUP BY scorer_id`
+      )
+      .bind(roomId)
+      .all();
+
+    const playerScores: Record<string, number> = {};
+    results.forEach((row: any) => {
+      playerScores[row.scorer_id] = row.total_score || 0;
+    });
+
+    return playerScores;
+  }
+
+  async getPlayerScoresByRoundId(roundId: string): Promise<Record<string, number>> {
+    const { results } = await this.db
+      .prepare(
+        `SELECT scorer_id, SUM(points) as round_score
+         FROM (
+           SELECT
+             CASE
+               WHEN answer_players.is_ai = 1 THEN voters.id
+               ELSE answer_players.id
+             END as scorer_id,
+             1 as points
+           FROM votes
+           INNER JOIN players voters ON votes.voter_id = voters.id
+           INNER JOIN answers ON votes.voted_for_answer_id = answers.id
+           INNER JOIN players answer_players ON answers.player_id = answer_players.id
+           WHERE votes.round_id = ? AND voters.is_ai = 0
+         )
+         GROUP BY scorer_id`
+      )
+      .bind(roundId)
+      .all();
+
+    const playerScores: Record<string, number> = {};
+    results.forEach((row: any) => {
+      playerScores[row.scorer_id] = row.round_score || 0;
+    });
+
+    return playerScores;
+  }
+
+  // Breaks a round's score down by source so the UI can explain *why* a player
+  // earned points, instead of re-deriving it from the raw (AI-inclusive) vote
+  // count on the answers table, which double-counts the AI's own vote.
+  async getScoreBreakdownByRoundId(
+    roundId: string
+  ): Promise<Record<string, { foolPoints: number; detectPoints: number }>> {
+    const { results } = await this.db
+      .prepare(
+        `SELECT
+           CASE WHEN answer_players.is_ai = 1 THEN voters.id ELSE answer_players.id END as player_id,
+           CASE WHEN answer_players.is_ai = 1 THEN 'detect' ELSE 'fool' END as source,
+           COUNT(*) as points
+         FROM votes
+         INNER JOIN players voters ON votes.voter_id = voters.id
+         INNER JOIN answers ON votes.voted_for_answer_id = answers.id
+         INNER JOIN players answer_players ON answers.player_id = answer_players.id
+         WHERE votes.round_id = ? AND voters.is_ai = 0 AND answer_players.is_ai = 0
+         GROUP BY player_id, source
+
+         UNION ALL
+
+         SELECT
+           voters.id as player_id,
+           'detect' as source,
+           COUNT(*) as points
+         FROM votes
+         INNER JOIN players voters ON votes.voter_id = voters.id
+         INNER JOIN answers ON votes.voted_for_answer_id = answers.id
+         INNER JOIN players answer_players ON answers.player_id = answer_players.id
+         WHERE votes.round_id = ? AND voters.is_ai = 0 AND answer_players.is_ai = 1
+         GROUP BY voters.id`
+      )
+      .bind(roundId, roundId)
+      .all();
+
+    const breakdown: Record<string, { foolPoints: number; detectPoints: number }> = {};
+    results.forEach((row: any) => {
+      const entry = breakdown[row.player_id] || { foolPoints: 0, detectPoints: 0 };
+      if (row.source === 'fool') {
+        entry.foolPoints += row.points || 0;
+      } else {
+        entry.detectPoints += row.points || 0;
+      }
+      breakdown[row.player_id] = entry;
+    });
+
+    return breakdown;
+  }
+
   // Helper mapping functions
   private mapRoom(row: any): Room {
     return {

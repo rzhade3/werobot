@@ -80,67 +80,6 @@
   font-weight: 600;
 }
 
-.players-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 15px;
-  margin-bottom: 30px;
-  list-style: none;
-  padding: 0;
-}
-
-.player-card {
-  padding: 20px;
-  border-radius: 10px;
-  border: 2px solid #ddd;
-  text-align: center;
-}
-
-.player-card.survived {
-  background: #dcfce7;
-  border-color: #22c55e;
-}
-
-.player-card.eliminated {
-  background: #f9fafb;
-  border-color: #d1d5db;
-  opacity: 0.7;
-}
-
-.player-card.ai {
-  border-width: 3px;
-}
-
-.player-card.ai.survived {
-  border-color: #dc2626;
-  background: #fee2e2;
-}
-
-.player-name {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.ai-badge {
-  background: #9333ea;
-  color: white;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 700;
-}
-
-.player-status {
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
 .play-again-btn {
   width: 100%;
   padding: 16px;
@@ -187,19 +126,5 @@
   .players-summary h2 {
     font-size: 1.5rem;
     margin-bottom: 20px;
-  }
-
-  .players-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
-  .player-card {
-    padding: 15px;
-  }
-
-  .player-name {
-    font-size: 1.1rem;
   }
 }

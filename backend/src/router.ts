@@ -678,6 +678,11 @@ app.get('/api/rooms/:roomCode/rounds/current/results', requireAuth, requireRoomA
   }
 
   const answers = await db.getAnswersByRoundId(round.id);
+  const roundScores = await db.getPlayerScoresByRoundId(round.id);
+  const scoreBreakdown = await db.getScoreBreakdownByRoundId(round.id);
+  // Cumulative total through this round, so players can see where they stand
+  // mid-game instead of only at the final results screen.
+  const cumulativeScores = await db.getPlayerScoresByRoomId(room.id);
 
   // Check if game is over
   const gameEnded = await gameService.isGameOver(room.id);
@@ -686,6 +691,9 @@ app.get('/api/rooms/:roomCode/rounds/current/results', requireAuth, requireRoomA
     success: true, 
     data: { 
       answers,
+      roundScores,
+      scoreBreakdown,
+      cumulativeScores,
       gameEnded,
     } 
   });
@@ -744,8 +752,8 @@ app.get('/api/rooms/:roomCode/winner', requireAuth, requireRoomAccess, async (c)
     return c.json({ success: false, error: 'Game not finished' }, 400);
   }
 
-  // Get winner and playerVotes in one call - no duplicate calculation
-  const { winner, playerVotes } = await gameService.determineWinner(room.id);
+  // Get winner, raw vote totals, and scoring totals in one call.
+  const { winner, playerVotes, playerScores } = await gameService.determineWinner(room.id);
   const allPlayers = await db.getPlayersByRoomId(room.id);
 
   return c.json({ 
@@ -754,6 +762,7 @@ app.get('/api/rooms/:roomCode/winner', requireAuth, requireRoomAccess, async (c)
       winner, 
       allPlayers,
       playerVotes,
+      playerScores,
     } 
   });
 });

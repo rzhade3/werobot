@@ -630,7 +630,7 @@ Start the next round. Only the host can start the next round.
 
 #### GET `/api/rooms/:roomCode/winner`
 
-Get the winner and final scores after the game ends. The winner is determined by total votes received across all rounds.
+Get the winner and final scores after the game ends. The winner is the human player with the most points across all rounds.
 
 **Authentication**: Required
 
@@ -642,8 +642,7 @@ Get the winner and final scores after the game ends. The winner is determined by
     "winner": {
       "id": "uuid",
       "name": "Winner Name",
-      "isAI": false,
-      "totalVotes": 15
+      "isAI": false
     },
     "allPlayers": [
       {
@@ -657,6 +656,11 @@ Get the winner and final scores after the game ends. The winner is determined by
       "player-uuid-1": 15,
       "player-uuid-2": 12,
       "player-uuid-3": 8
+    },
+    "playerScores": {
+      "player-uuid-1": 6,
+      "player-uuid-2": 4,
+      "player-uuid-3": 3
     }
   }
 }

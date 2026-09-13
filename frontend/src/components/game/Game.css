@@ -301,86 +301,6 @@
   margin: 30px 0;
 }
 
-.vote-results h3 {
-  margin: 0 0 20px 0;
-  color: #7c3aed;
-  font-size: 1.3rem;
-  font-weight: 600;
-}
-
-.vote-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.vote-item {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 15px 20px;
-  background: white;
-  border-radius: 8px;
-  border: 2px solid #ddd;
-}
-
-.vote-item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.vote-item.eliminated {
-  border-color: #9333ea;
-  background: #faf5ff;
-}
-
-.vote-item .player-name {
-  font-weight: 600;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.vote-item .ai-badge {
-  display: inline-block;
-  background: #9333ea;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.vote-item .vote-count {
-  font-weight: 700;
-  color: #9333ea;
-  font-size: 1.1rem;
-}
-
-.vote-item.eliminated .vote-count {
-  color: #9333ea;
-}
-
-.vote-item .player-answer {
-  padding: 10px 12px;
-  background: #f9fafb;
-  border-radius: 6px;
-  border-left: 3px solid #9333ea;
-  font-size: 0.95rem;
-  color: #4b5563;
-  line-height: 1.5;
-}
-
-.vote-item .player-answer em {
-  font-style: normal;
-}
-
 .next-round-btn {
   padding: 15px 30px;
   background: #9333ea;
@@ -453,17 +373,6 @@
 
   .vote-results {
     padding: 15px;
-  }
-
-  .vote-item {
-    padding: 12px 15px;
-  }
-
-  .vote-item .player-answer {
-    padding: 10px;
-    font-size: 0.9rem;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
   }
 
   .elimination {

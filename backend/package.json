@@ -8,6 +8,7 @@
     "deploy": "wrangler deploy",
     "tail": "wrangler tail",
     "test": "vitest",
+    "eval:ai-vote": "node scripts/evaluate-ai-voting.mjs",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [

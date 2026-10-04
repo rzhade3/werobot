@@ -9,6 +9,7 @@ interface AIConfig {
 }
 
 const DEFAULT_CF_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+const CLEF_MODEL = '@cf/cloudflare/clef';
 const DEFAULT_OPENAI_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
 export async function generateAIAnswer(
@@ -161,12 +162,16 @@ export async function rankAnswersForVote(
 
   // Primary: Use Cloudflare AI Workers if available (production)
   if (aiBinding) {
-    console.log('[AI Voting] Using Cloudflare AI Workers');
+    console.log('[AI Voting] Using Cloudflare Clef');
     try {
-      return await rankWithCloudflareAI(aiBinding, prompt, answers, model);
+      return await rankWithClef(aiBinding, prompt, answers);
     } catch (error) {
-      console.error('[AI Voting] Cloudflare AI ranking error:', error);
-      // Fall through to external API in non-production
+      console.error('[AI Voting] Cloudflare Clef error; falling back to text model:', error);
+      try {
+        return await rankWithCloudflareAI(aiBinding, prompt, answers, model);
+      } catch (fallbackError) {
+        console.error('[AI Voting] Cloudflare AI ranking error:', fallbackError);
+      }
     }
   } else {
     console.warn('[AI Voting] Cloudflare AI binding not available');
@@ -186,6 +191,34 @@ export async function rankAnswersForVote(
   console.warn('[AI Voting] No AI provider available, using random vote');
   const randomIndex = Math.floor(Math.random() * answers.length);
   return answers[randomIndex]!.id;
+}
+
+async function rankWithClef(
+  ai: Ai,
+  prompt: string,
+  answers: Array<{ id: string; text: string }>
+): Promise<string> {
+  const response = await ai.run(CLEF_MODEL as any, {
+    model: 'clef',
+    state: {
+      prompt,
+      answers: answers.map(({ id, text }) => ({ id, text })),
+    },
+    questions: {
+      most_ai_like: {
+        type: 'choice',
+        instructions: 'Which answer sounds most like it was written by AI?',
+        criteria: Object.fromEntries(answers.map(({ id, text }) => [id, text])),
+      },
+    },
+  }) as any;
+
+  const selectedAnswerId = response?.answers?.most_ai_like?.choice;
+  if (typeof selectedAnswerId !== 'string' || !answers.some(answer => answer.id === selectedAnswerId)) {
+    throw new Error('Invalid answer from Cloudflare Clef');
+  }
+
+  return selectedAnswerId;
 }
 
 async function rankWithCloudflareAI(

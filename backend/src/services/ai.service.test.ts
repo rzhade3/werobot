@@ -33,6 +33,75 @@ describe('rankAnswersForVote', () => {
     expect(['answer-1', 'answer-2', 'answer-3']).toContain(result);
   });
 
+  it('should use Clef structured choices to select an answer', async () => {
+    const answers = [
+      { id: 'answer-1', text: 'Blue' },
+      { id: 'answer-2', text: 'Red' },
+    ];
+    const run = vi.fn().mockResolvedValue({
+      answers: { most_ai_like: { type: 'choice', choice: 'answer-2' } },
+    });
+
+    const result = await rankAnswersForVote('Favorite color?', answers, {
+      aiBinding: { run } as unknown as Ai,
+    });
+
+    expect(result).toBe('answer-2');
+    expect(run).toHaveBeenCalledWith('@cf/cloudflare/clef', {
+      model: 'clef',
+      state: {
+        prompt: 'Favorite color?',
+        answers,
+      },
+      questions: {
+        most_ai_like: {
+          type: 'choice',
+          instructions: 'Which answer sounds most like it was written by AI?',
+          criteria: { 'answer-1': 'Blue', 'answer-2': 'Red' },
+        },
+      },
+    });
+  });
+
+  it('should fall back to the existing Workers AI model if Clef fails', async () => {
+    const answers = [
+      { id: 'answer-1', text: 'Blue' },
+      { id: 'answer-2', text: 'Red' },
+    ];
+    const run = vi.fn()
+      .mockRejectedValueOnce(new Error('Clef unavailable'))
+      .mockResolvedValueOnce({ response: '2' });
+
+    const result = await rankAnswersForVote('Favorite color?', answers, {
+      aiBinding: { run } as unknown as Ai,
+    });
+
+    expect(result).toBe('answer-2');
+    expect(run).toHaveBeenNthCalledWith(1, '@cf/cloudflare/clef', expect.any(Object));
+    expect(run).toHaveBeenNthCalledWith(
+      2,
+      '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+      expect.any(Object)
+    );
+  });
+
+  it('should fall back if Clef returns an answer that was not provided', async () => {
+    const answers = [
+      { id: 'answer-1', text: 'Blue' },
+      { id: 'answer-2', text: 'Red' },
+    ];
+    const run = vi.fn()
+      .mockResolvedValueOnce({ answers: { most_ai_like: { choice: 'unknown' } } })
+      .mockResolvedValueOnce({ response: '1' });
+
+    const result = await rankAnswersForVote('Favorite color?', answers, {
+      aiBinding: { run } as unknown as Ai,
+    });
+
+    expect(result).toBe('answer-1');
+    expect(run).toHaveBeenCalledTimes(2);
+  });
+
   it('should parse AI response correctly for valid answer index', async () => {
     const answers = [
       { id: 'answer-1', text: 'Blue' },

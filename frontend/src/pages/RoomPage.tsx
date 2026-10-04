@@ -14,6 +14,7 @@ export const RoomPage: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>('lobby');
   const [playerId, setPlayerId] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [accessError, setAccessError] = useState('');
 
   useEffect(() => {
     if (!roomCode) {
@@ -47,7 +48,19 @@ export const RoomPage: React.FC = () => {
         }
       } catch (err: any) {
         console.error('Error verifying access:', err);
-        navigate('/');
+        const status = err.response?.status;
+        if (status === 401 || status === 403) {
+          const normalizedRoomCode = roomCode.toUpperCase();
+          navigate(`/?roomCode=${encodeURIComponent(normalizedRoomCode)}`, {
+            replace: true,
+          });
+          return;
+        }
+
+        setAccessError(
+          err.response?.data?.error || 'Unable to load this room. Please try again.'
+        );
+        setLoading(false);
       }
     };
 
@@ -75,6 +88,16 @@ export const RoomPage: React.FC = () => {
       <div className="App">
         <div className="container">
           <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (accessError) {
+    return (
+      <div className="App">
+        <div className="container">
+          <div className="error" role="alert">{accessError}</div>
         </div>
       </div>
     );

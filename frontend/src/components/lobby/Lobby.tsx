@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Check, Copy } from 'lucide-react';
 import { api } from '../../services/api';
 import { socketService } from '../../services/socket';
 import type { Player } from '../../types';
@@ -18,6 +19,7 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, playerId, onGameStarted 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isHost, setIsHost] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
 
   const fetchPlayers = useCallback(async () => {
     try {
@@ -95,6 +97,17 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, playerId, onGameStarted 
     }
   };
 
+  const handleCopyRoomCode = async () => {
+    try {
+      await navigator.clipboard.writeText(roomCode);
+      setCopyStatus('copied');
+      window.setTimeout(() => setCopyStatus('idle'), 2000);
+    } catch (err) {
+      console.error('Failed to copy room code:', err);
+      setCopyStatus('error');
+    }
+  };
+
   const canStartGame = isHost && promptStatus.total === promptStatus.submitted && promptStatus.total >= 2;
 
   return (
@@ -107,7 +120,23 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, playerId, onGameStarted 
           <div className="room-code">
             <span>Room Code:</span>
             <code aria-label={`Room code: ${roomCode.split('').join(' ')}`}>{roomCode}</code>
+            <button
+              type="button"
+              className="copy-room-code-btn"
+              onClick={handleCopyRoomCode}
+              aria-label={copyStatus === 'copied' ? 'Room code copied' : 'Copy room code'}
+              title={copyStatus === 'copied' ? 'Copied' : 'Copy room code'}
+            >
+              {copyStatus === 'copied'
+                ? <Check size={18} aria-hidden="true" />
+                : <Copy size={18} aria-hidden="true" />}
+            </button>
           </div>
+          {copyStatus === 'error' && (
+            <p className="copy-room-code-error" role="alert">
+              Unable to copy. Select the room code manually.
+            </p>
+          )}
         </header>
 
         <div className="lobby-content">

@@ -1,16 +1,33 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Users, Lightbulb, Vote, Trophy } from 'lucide-react';
 import { apiService } from '../services/api';
 import '../components/HomePage.css';
 
+const getInviteRoomCode = (value: string | null): string => {
+  const roomCode = value?.trim().toUpperCase() || '';
+  return /^[A-Z0-9]{6}$/.test(roomCode) ? roomCode : '';
+};
+
 export const HomePage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const inviteRoomCode = getInviteRoomCode(searchParams.get('roomCode'));
   const [playerName, setPlayerName] = React.useState('');
-  const [roomCode, setRoomCode] = React.useState('');
+  const [roomCode, setRoomCode] = React.useState(inviteRoomCode);
   const [error, setError] = React.useState('');
   const [loading, setLoading] = React.useState(false);
-  const [actionType, setActionType] = React.useState<'create' | 'join'>('create');
+  const [actionType, setActionType] = React.useState<'create' | 'join'>(
+    inviteRoomCode ? 'join' : 'create'
+  );
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (inviteRoomCode) {
+      setRoomCode(inviteRoomCode);
+      setActionType('join');
+      setError('');
+    }
+  }, [inviteRoomCode]);
 
   const handleCreateRoom = async (e: React.FormEvent) => {
     e.preventDefault();

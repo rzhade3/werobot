@@ -11,28 +11,29 @@ The AI player tries to sound human-like with:
 
 ## AI Voting Logic
 
-The AI evaluates each answer to identify AI-like responses:
+AI voting uses Cloudflare's **Clef** decision model. The game sends the prompt as
+structured state and the candidate answers as options in a typed `choice`
+question. Clef selects the answer that appears most AI-like based on:
+
 - Looks for overly formal or perfect language
 - Identifies generic, robotic, or repetitive phrasing
 - Spots answers with little personal touch or emotion
 - Detects excessive detail or typical AI response patterns
 
-The AI votes for the answer it thinks is most AI-like. Human players score by correctly identifying the real AI answer or by fooling other humans into voting for their answer as AI.
+The selected Clef option is mapped back to the corresponding answer ID. Human
+players score by correctly identifying the real AI answer or by fooling other
+humans into voting for their answer as AI.
 
 ## Configuration
 
 ### Primary: Cloudflare AI Workers (Production)
 
-The AI is now powered by **Cloudflare Workers AI** using the `@cf/meta/llama-3.3-70b-instruct-fp8-fast` model.
+Production uses two Cloudflare Workers AI models:
 
-**Benefits:**
-- ✅ **10,000 free AI inferences per day**
-- ✅ **No API keys required** in production
-- ✅ **Runs on Cloudflare's edge network** (low latency)
-- ✅ **Commercial use allowed**
-- ✅ **Beyond free tier**: Only $0.011 per 1,000 Neurons
+- Answer generation: `@cf/meta/llama-3.3-70b-instruct-fp8-fast`
+- AI voting/ranking: `@cf/cloudflare/clef`
 
-The AI binding is automatically configured in `wrangler.toml`:
+Both use the same Workers AI binding and require no provider API key:
 
 ```toml
 [ai]
@@ -40,11 +41,15 @@ binding = "AI"
 
 [vars]
 OPENAI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+AI_RANKING_MODEL = "@cf/cloudflare/clef"
 ```
 
 ### Fallback: External API (Development Only)
 
-For development/testing, you can optionally configure an external API endpoint as a fallback. This **only works when ENVIRONMENT is not "production"**.
+For development/testing, you can optionally configure an OpenAI-compatible API
+endpoint as a fallback. This **only works when `ENVIRONMENT` is not
+`"production"`**. `OPENAI_MODEL` controls the model used by this fallback;
+`AI_RANKING_MODEL` applies only to the Workers AI Clef call.
 
 Create a `.dev.vars` file in the root directory:
 
@@ -59,4 +64,5 @@ OPENAI_MODEL=openai/gpt-4.1
 1. Cloudflare AI is unavailable, AND
 2. `ENVIRONMENT` is not set to `"production"`
 
-This ensures production always uses Cloudflare AI Workers for reliability and cost efficiency.
+If ranking still cannot be completed, the AI player chooses a random votable
+answer. Production does not call the external API fallback.

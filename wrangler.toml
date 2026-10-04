@@ -31,3 +31,5 @@ ROOM_TTL_HOURS = "6"
 CLEANUP_BATCH_SIZE = "100"
 # Cloudflare AI model (primary)
 OPENAI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+# Cloudflare decision model used for AI voting
+AI_RANKING_MODEL = "@cf/cloudflare/clef"

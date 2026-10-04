@@ -44,15 +44,15 @@ Built with a modern serverless stack deployed entirely on Cloudflare:
 - KV Storage (sessions) - See [DATABASE.md](./DATABASE.md)
 - Durable Objects (WebSocket state)
 - Cron Triggers (cleanup worker)
-- GitHub Models / OpenAI (AI player)
+- Cloudflare Workers AI (AI player)
 
 ## Key Features
 
 ✅ **Same-Origin Deployment** - Everything on `werobot.pages.dev` (no CORS!)
 ✅ **Real-time Updates** - WebSocket connections via Durable Objects
 ✅ **Secure Sessions** - HttpOnly, Secure, SameSite=Strict cookies
-✅ **AI Player** - Powered by GPT-4 via GitHub Models
-✅ **Smart AI Voting** - AI evaluates answers to vote out humans
+✅ **AI Player** - Generates answers with Cloudflare Workers AI
+✅ **Smart AI Voting** - Uses Cloudflare Clef to identify AI-like answers
 ✅ **Automatic Cleanup** - Cron worker deletes expired rooms every 2 hours (keeps costs low)
 ✅ **Scalable** - Cloudflare's edge network
 ✅ **Serverless** - No servers to manage

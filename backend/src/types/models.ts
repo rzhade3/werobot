@@ -103,6 +103,7 @@ export interface Env {
   OPENAI_API_KEY?: string;
   OPENAI_API_ENDPOINT?: string;
   OPENAI_MODEL?: string;
+  AI_RANKING_MODEL?: string;
   CORS_ORIGIN?: string;
   
   // Variables

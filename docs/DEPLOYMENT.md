@@ -53,6 +53,8 @@ npx wrangler pages deployment tail --project-name=werobot
 Look for:
 - ✅ `[AI] Using Cloudflare AI Workers` - Working!
 - ⚠️ `[AI] Cloudflare AI binding not available` - Check wrangler.toml
+- ✅ `[AI Voting] Using Cloudflare AI Workers` - Clef ranking is running
+- ⚠️ `[AI Voting] Cloudflare AI ranking error` - Clef failed and fallback behavior was used
 
 Test in production:
 1. Create a game room at https://werobot.pages.dev
@@ -123,9 +125,11 @@ All components share the same D1 database and communicate via service bindings.
 
 ### Cloudflare AI Workers (Default)
 
-The app uses **Cloudflare Workers AI** by default with the following model:
-- Model: `@cf/meta/llama-3.3-70b-instruct-fp8-fast`
-- Free tier: **10,000 AI inferences per day**
+The app uses **Cloudflare Workers AI** by default with separate models for each
+AI operation:
+
+- Answer generation: `@cf/meta/llama-3.3-70b-instruct-fp8-fast`
+- AI voting/ranking: `@cf/cloudflare/clef`
 - No secrets or API keys required!
 
 **Configuration in wrangler.toml:**
@@ -136,6 +140,7 @@ binding = "AI"
 
 [vars]
 OPENAI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+AI_RANKING_MODEL = "@cf/cloudflare/clef"
 ```
 
 ### External API Fallback (Development Only)
@@ -170,6 +175,9 @@ If the AI player isn't working:
    - `[AI] Using Cloudflare AI Workers` - Working!
    - `[AI] Cloudflare AI binding not available` - Not configured
    - `[AI] No AI provider available` - Fallback also failed
+   - `[AI Voting] Using Cloudflare AI Workers` - Clef ranking is working
+   - `[AI Voting] Cloudflare AI ranking error` - Clef response or request failed
+   - `[AI Voting] No AI provider available, using random vote` - Ranking fallbacks were unavailable
 
 3. **Redeploy:**
    ```bash

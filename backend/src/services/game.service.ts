@@ -256,6 +256,7 @@ export class GameService {
         apiKey: this.env.OPENAI_API_KEY,
         endpoint: this.env.OPENAI_API_ENDPOINT,
         model: this.env.OPENAI_MODEL,
+        rankingModel: this.env.AI_RANKING_MODEL,
         environment: this.env.ENVIRONMENT,
       }
     );

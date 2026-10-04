@@ -41,8 +41,8 @@ Visit: http://localhost:3000
 ### Cloudflare AI (Default)
 
 Production uses Cloudflare Workers AI by default with:
-- Model: `@cf/meta/llama-3.3-70b-instruct-fp8-fast`
-- Free tier: 10,000 AI inferences per day
+- Answer generation model: `@cf/meta/llama-3.3-70b-instruct-fp8-fast`
+- AI voting model: `@cf/cloudflare/clef`
 - Configured via `wrangler.toml`
 
 Local development is fully offline and uses deterministic fallback answers and
@@ -66,6 +66,10 @@ OPENAI_API_KEY=your-api-key
 OPENAI_API_ENDPOINT=https://models.github.ai/inference/chat/completions
 OPENAI_MODEL=openai/gpt-4.1
 ```
+
+`OPENAI_MODEL` configures answer generation and the optional OpenAI-compatible
+ranking fallback. The Workers AI ranking model is configured separately with
+`AI_RANKING_MODEL`.
 
 Custom ports can also be passed inline when running development scripts:
 ```bash
